@@ -13,11 +13,10 @@ from sentence_classifier.sentence_classifier.NLP_utils import *
 
 class RNN(nn.Module):
     def __init__(self, embeddings, padding_idx=0, hidden_size=300, num_layers=2, dropout=0.5, bid=True,
-                 simulate_attn=False, rnn_type='default', debug_mode=False):
+                 rnn_type='default', debug_mode=False):
         super(RNN, self).__init__()
         self.debug_mode = debug_mode
         self.dropout = dropout
-        self.simulate_attn = simulate_attn
         # Initialize embeddings
         vocab_size = len(embeddings)
         embedding_size = len(embeddings[0])
@@ -48,7 +47,7 @@ class RNN(nn.Module):
         x, hidden = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)  # Add the padding again
         # select the value at the length of that sentence (we are only interested in last output) or middle if bidirectional
         row_indices = torch.arange(0, x.size(0)).long()
-        x = x[row_indices, lns / 2, :] if self.simulate_attn else x[row_indices, lns - 1, :]
+        x = x[row_indices, lns - 1, :]
         if self.debug_mode: print('before d1/fc1: ', x.shape)
         if self.dropout is not None: x = self.d1(x)
         x = self.fc1(x)

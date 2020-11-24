@@ -19,11 +19,11 @@ text_col = 'review'
 label_col = 'sentiment'
 df = df[0:100]
 df[text_col] = df[text_col].apply(lambda x: x.strip().lower()[0:1000])
-print('num annotations:', len(df), '\n\n', df[label_col].value_counts(), '\n\n', df[[label_col, text_col]].head())
+print('num annotations:', len(df), '\n\n', df[label_col].value_counts(), '\n\n', df[[label_col, text_col]].head(2))
 
 """# Run BERT"""
 BERT_tokenizer = 'bert-base-uncased'
-n_epochs = 1  # 5
+n_epochs = 1
 bert_model = train_BERT(sentences=df[text_col], labels=df[label_col], BERT_tokenizer=BERT_tokenizer,
                         test_size=0.2, n_epochs=n_epochs, output_dir=None)
 bert_model['stats']
@@ -50,9 +50,8 @@ load_and_run_classifier(sentences=df[text_col][0:2],
 """# Run LSTM"""
 n_epochs = 1
 rnn_obj = RNN(emb_model_torch['embeddings'], padding_idx=emb_model_torch['word2id']['<PAD>']
-              , rnn_type='lstm', bid=True, simulate_attn=True, debug_mode=False)
+              , rnn_type='lstm', bid=True, debug_mode=False)
 print(rnn_obj)
-rnn_model = train_NN(rnn_obj, sentences=df[text_col], labels=df[label_col], emb_model=emb_model_torch,
-                     tokenization_type='clean'
-                     , SEED=0, test_size=0.2, n_epochs=n_epochs, output_dir=None)
+rnn_model = train_NN(sentences=df[text_col], labels=df[label_col], nn_model=rnn_obj, emb_model=emb_model_torch,
+                     tokenization_type='clean', SEED=0, test_size=0.2, n_epochs=n_epochs, output_dir=None)
 print(rnn_model['stats'])
