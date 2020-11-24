@@ -1,17 +1,19 @@
 """Main module."""
 import gensim.downloader as api
 from sklearn import svm
-
 from sentence_classifier.sentence_classifier.BERT import *
 from sentence_classifier.sentence_classifier.NN import *
 from sentence_classifier.sentence_classifier.simple_classifiers import *
 
-w2v_model = api.load("glove-wiki-gigaword-50")
-emb_model_torch = embedding2torch(w2v_model, SEED=0)
+
+"""
+Some examples on how to use the various functions
+"""
+
 
 """# Load data"""
 
-df = pd.read_csv('https://raw.githubusercontent.com/KCLaurelie/NLP-playground/master/prometheus/imdb_5k_reviews.csv',
+df = pd.read_csv('https://raw.githubusercontent.com/KCLaurelie/prometheus/master/sentence_classifier/sentence_classifier/imdb_5k_reviews.csv',
                  header=1)
 text_col = 'review'
 label_col = 'sentiment'
@@ -35,6 +37,8 @@ kf = BERT_KFOLD(sentences=df[text_col], labels=df[label_col], n_splits=10, BERT_
 print(kf['stats'], '\n\n', kf['stats_classes'])
 
 """# Run SVM"""
+w2v_model = api.load("glove-wiki-gigaword-50")
+emb_model_torch = embedding2torch(w2v_model, SEED=0)
 svm_model = train_classifier(sentences=df[text_col], labels=df[label_col], emb_model=w2v_model,
                              classifier=svm.LinearSVC(multi_class='crammer_singer', class_weight='balanced'),
                              test_size=0.2, output_dir=None)
