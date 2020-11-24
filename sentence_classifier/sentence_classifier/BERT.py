@@ -13,12 +13,12 @@ from sentence_classifier.sentence_classifier.NLP_utils import *
 def prep_BERT_dataset(sentences, labels=None, BERT_tokenizer='bert-base-uncased', MAX_TKN_LEN=511, debug=False):
     """
     prepares data for BERT fine-tuning
-    :param sentences: list or series. sentences to classify
-    :param labels: list or series, default None. classification labels for annotated data
-    :param BERT_tokenizer: string, default 'bert-base-uncased'. Bert base model to use for fine-tuning
-    :param MAX_TKN_LEN: see https://github.com/huggingface/transformers/issues/2446
+    :param sentences: list or array-like. list of texts to classify
+    :param labels: list or array-like, default None. list of labels corresponding to sentences
+    :param BERT_tokenizer: string, default 'bert-base-uncased'. BERT base model used
+    :param MAX_TKN_LEN: integer, default 511. see https://github.com/huggingface/transformers/issues/2446
     :param debug: bool, default False. set to True to display inetrmediate results
-    :return: prepared dataset (TensorDataset) and nmber of dictinct labels
+    :return: prepared dataset (torch Dataset) and nmber of dictinct labels
     """
     sentences = pd.Series(sentences)
     # load relevant data and add special tokens for BERT to work properly
@@ -61,13 +61,15 @@ def prep_BERT_dataset(sentences, labels=None, BERT_tokenizer='bert-base-uncased'
 
 def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_dir=None):
     """
-    fine-tunes Bert parameters for text classification with dataset provided
+    fine-tunes Bert for text classification
     :param model: base Bert model
     :param train_dataloader: Tensor Dataset. training data
     :param validation_dataloader: Tensor Dataset. testing data
     :param n_epochs: integer, default 5. number of epochs
     :param output_dir: string, default None. directory where to save the fine-tuned model
-    :return: 'model': fine-tuned Bert model, 'stats': high level performance statistics, 'stats_classes': detailed performance statistics
+    :return:    model: fine-tuned Bert model with highest performance over k folds
+                stats: high level performance statistics
+                stats_classes: detailed performance statistics
     """
     ###################################################################################
     # BERT fine-tuning parameters
@@ -129,7 +131,6 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
         tr_perf_classes = tr_perf_classes.groupby(tr_perf_classes.index).sum()
         tr_perf_classes[['f1-score', 'precision', 'recall']] = tr_perf_classes[['f1-score', 'precision', 'recall']].div(
             tr_perf_classes['support'], axis="index")
-        # tr_perf_classes=tr_perf_classes.replace(0, np.NaN).groupby(tr_perf_classes.index).agg({'f1-score':'mean','precision':'mean', 'recall':'mean', 'support':'sum'})
         print('TRAIN - Loss: {:.3f} - F1: {:.3f} Acc: {:.3f} P: {:.3f} R: {:.3f}'.format(tr_loss / (1 + step),
                                                                                          tr_perf['f1'], tr_perf['acc'],
                                                                                          tr_perf['p'], tr_perf['r']))
@@ -166,7 +167,6 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
         eval_perf_classes = eval_perf_classes.groupby(eval_perf_classes.index).sum()
         eval_perf_classes[['f1-score', 'precision', 'recall']] = eval_perf_classes[
             ['f1-score', 'precision', 'recall']].div(eval_perf_classes['support'], axis="index")
-        # eval_perf_classes=eval_perf_classes.replace(0, np.NaN).groupby(eval_perf_classes.index).agg({'f1-score':'mean','precision':'mean', 'recall':'mean', 'support':'sum'})
         print('TEST -- F1: {:.3f} Acc: {:.3f} P: {:.3f} R: {:.3f}'.format(eval_perf['f1'], eval_perf['acc'],
                                                                           eval_perf['p'], eval_perf['r']))
 
@@ -193,12 +193,20 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
     return {'stats': stats_to_save, 'stats_classes': stats_classes_to_save, 'model': model_to_save}
 
 
-"""# Functions to train/evaluate model"""
-
-
-# output_dir='/home/ubuntu/data/ACL2020/bert_models/base')
 def train_BERT(sentences, labels, BERT_tokenizer='bert-base-uncased', test_size=0.1,
                n_epochs=5, batch_size=32, output_dir=None, MAX_TKN_LEN=511):
+    """
+    formats dataset and fine-tunes Bert model on it
+    :param sentences: list or array-like. list of texts to classify
+    :param labels: list or array-like. list of labels corresponding to sentences
+    :param BERT_tokenizer: string, default 'bert-base-uncased'. BERT base model used
+    :param test_size: float, default 0.10. train/test split size
+    :param n_epochs: integer, default 5. number of epochs used to fine-tune Bert
+    :param batch_size: integer, default 32. how many samples pper batch to load
+    :param output_dir: string, default None. directory where to save the fine-tuned model
+    :param MAX_TKN_LEN: integer, default 511. see https://github.com/huggingface/transformers/issues/2446
+    :return:
+    """
     print('formating dataset')
     prep_data = prep_BERT_dataset(sentences=sentences, labels=labels, BERT_tokenizer=BERT_tokenizer,
                                   MAX_TKN_LEN=MAX_TKN_LEN)
@@ -223,6 +231,20 @@ def train_BERT(sentences, labels, BERT_tokenizer='bert-base-uncased', test_size=
 
 def BERT_KFOLD(sentences, labels, BERT_tokenizer='bert-base-uncased',
                n_splits=10, random_state=42, n_epochs=5, output_dir=None, MAX_TKN_LEN=511):
+    """
+    fine-tunes Bert model using k-old cross validation
+    :param sentences: list or array-like. list of texts to classify
+    :param labels: list or array-like. list of labels corresponding to sentences
+    :param BERT_tokenizer: string, default 'bert-base-uncased'. BERT base model used
+    :param n_splits: integer, default None. number of folds to use
+    :param random_state: integer, default 42. random seed to initialize folds generation
+    :param n_epochs: integer, default 5. number of epochs used to fine-tune Bert
+    :param output_dir: string, default None. directory where to save the fine-tuned model
+    :param MAX_TKN_LEN: integer, default 511. see https://github.com/huggingface/transformers/issues/2446
+    :return:    model: fine-tuned Bert model with highest performance over k folds
+                stats: high level performance statistics
+                stats_classes: detailed performance statistics
+    """
     prep_data = prep_BERT_dataset(sentences=sentences, labels=labels, BERT_tokenizer=BERT_tokenizer,
                                   MAX_TKN_LEN=MAX_TKN_LEN)
     dataset = prep_data['dataset']
@@ -243,6 +265,14 @@ def BERT_KFOLD(sentences, labels, BERT_tokenizer='bert-base-uncased',
 
 
 def load_BERT_components(trained_bert_model, BERT_tokenizer='bert-base-uncased', do_lower_case=True):
+    """
+    loads in cache model components
+    :param trained_bert_model: string or pytorch model. pre-trained model name or path
+    :param BERT_tokenizer: string, default 'bert-base-uncased'. BERT base model used
+    :param do_lower_case: bool, default True. Whether or not to lowercase the input when tokenizing
+    :return:    tokenizer: tokenizer loaded in cache
+                model: pytorch model loaded in cache
+    """
     tokenizer = BertTokenizer.from_pretrained(BERT_tokenizer, do_lower_case=do_lower_case)
     trained_bert_model = BertForSequenceClassification.from_pretrained(trained_bert_model)
     return {'tokenizer': tokenizer, 'model': trained_bert_model}
@@ -251,6 +281,15 @@ def load_BERT_components(trained_bert_model, BERT_tokenizer='bert-base-uncased',
 # load pre-trained model and classify a new sentence
 def load_and_run_BERT(sentences, trained_bert_model, BERT_tokenizer='bert-base-uncased', MAX_TKN_LEN=511,
                       batch_size=32):
+    """
+    loads pre-trained Bert model and runs it on new text to classify
+    :param sentences: list or array-like. list of texts to classify
+    :param trained_bert_model: string or pytorch model. pre-trained model name or path
+    :param BERT_tokenizer: string, default 'bert-base-uncased'. BERT base model used
+    :param MAX_TKN_LEN: integer, default 511. see https://github.com/huggingface/transformers/issues/2446
+    :param batch_size: integer, default 32. how many samples pper batch to load
+    :return: dataframe of sentences classified along with probaility scores
+    """
     if isinstance(trained_bert_model, str):  # load trained BERT model if needed
         trained_bert_model = BertForSequenceClassification.from_pretrained(trained_bert_model)
     preds_class, probs, preds = [], [], pd.DataFrame()
