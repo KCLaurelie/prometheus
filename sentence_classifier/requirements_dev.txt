@@ -1,0 +1,18 @@
+pip==19.2.3
+bump2version==0.5.11
+wheel==0.33.6
+watchdog==0.9.0
+flake8==3.7.8
+tox==3.14.0
+coverage==4.5.4
+Sphinx==1.8.5
+twine==1.14.0
+tokenizers==0.9.2
+torch @ file:///opt/concourse/worker/volumes/live/f1ad46c0-b0e0-4a2c-42b1-36c80dc13116/volume/pytorch_1596288435440/work
+tqdm @ file:///tmp/build/80754af9/tqdm_1602185206534/work
+transformers==3.4.0
+gensim==3.8.3
+nltk @ file:///tmp/build/80754af9/nltk_1592496090529/work
+scikit-learn @ file:///opt/concourse/worker/volumes/live/111833a2-339b-4578-413b-7337bb8fe64a/volume/scikit-learn_1598376920601/work
+scipy @ file:///opt/concourse/worker/volumes/live/7f5e51f8-abf3-4409-4c56-a4fb14cc9869/volume/scipy_1593104185999/work
+
