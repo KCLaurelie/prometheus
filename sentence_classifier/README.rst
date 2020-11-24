@@ -16,7 +16,7 @@ sentence_classifier
 
 
 
-to fine-tune various algorithms on sentence classification tasks
+framework to fine-tune various algorithms on sentence classification tasks
 
 
 * Free software: MIT license
