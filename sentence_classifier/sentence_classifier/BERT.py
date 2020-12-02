@@ -178,7 +178,7 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
             tr_perf_classes['dataset'] = 'train'
             eval_perf_classes['dataset'] = 'test'
             stats_classes_to_save = pd.concat([tr_perf_classes, eval_perf_classes])
-            model_to_save = model
+            model_to_save = model.copy()
         print('best F1 score obtained: {:.3f} at epoch {}'.format(best_f1, best_epoch))
 
     # save model with best f1
