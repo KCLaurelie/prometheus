@@ -178,19 +178,17 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
             tr_perf_classes['dataset'] = 'train'
             eval_perf_classes['dataset'] = 'test'
             stats_classes_to_save = pd.concat([tr_perf_classes, eval_perf_classes])
-            model_to_save = model.copy()
+
+        if output_dir is not None: #save model with best F1
+            try:
+                print('saving...')
+                model.save_pretrained(output_dir)
+                stats_classes_to_save.to_csv(output_dir + '/stats.csv', header=True)
+            except:
+                print('model not saved, please enter valid path')
         print('best F1 score obtained: {:.3f} at epoch {}'.format(best_f1, best_epoch))
 
-    # save model with best f1
-    if output_dir is not None:
-        try:
-            print('saving model...')
-            model_to_save.save_pretrained(output_dir)
-            stats_classes_to_save.to_csv(output_dir + '/stats.csv', header=True)
-        except:
-            print('model not saved, please enter valid path')
-
-    return {'stats': stats_to_save, 'stats_classes': stats_classes_to_save, 'model': model_to_save}
+    return {'stats': stats_to_save, 'stats_classes': stats_classes_to_save, 'model': model}
 
 
 def train_BERT(sentences, labels, BERT_tokenizer='bert-base-uncased', test_size=0.1,
