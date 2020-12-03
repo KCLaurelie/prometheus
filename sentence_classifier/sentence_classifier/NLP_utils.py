@@ -79,7 +79,7 @@ def tokenize_hf(df, text_col='text', outfile=None):
     for snt in data:
         tokenized_snt = tokenizer.encode(snt)
         if outfile is not None:
-            f.write("{}\n".format("\t".join(_tkns)))
+            f.write("{}\n".format("\t".join(tokenized_snt.tokens)))
         else:
             tok_snts.append(tokenized_snt.tokens)
     return tok_snts
@@ -266,7 +266,7 @@ def embed_sentences(tkn_sentences, w2v_model, do_avg=True, use_weights=False, **
         if use_weights:
             if i_snt == 0: print('embedding using Word2Vec model (using average sum of tokens)')
             debug = True if i_snt < 2 else False  # print first 2 sentences to check
-            weights = gutils.get_wa(sentence=snt, debug=debug, **kwargs)
+            weights = get_wa(sentence=snt, debug=debug, **kwargs)
         for i_word, word in enumerate(snt):  # Loop over the words of a sentence
             if word in w2v_model.wv:
                 word_emb = w2v_model.wv.get_vector(word) * (weights[i_word] if use_weights else 1)
