@@ -2,6 +2,15 @@ import pandas as pd
 import numpy as np
 
 
+def make_smf_formula(covariates, timestamp=None):
+    str_cov = ' + '.join(covariates)
+    if timestamp is not None:
+        str_cov = timestamp + ' + ' + str_cov
+        add_slope = ' + ' + timestamp + ' * '
+        str_cov += add_slope + add_slope.join(covariates)
+    return str_cov
+
+
 def cut_with_na(to_bin, bins, labels, na_category='not known'):
     to_bin = pd.to_numeric(to_bin, errors='coerce')
     res = pd.cut(pd.Series(to_bin),

@@ -10,6 +10,7 @@ df = pd.read_excel(r'C:\Users\K1774755\PycharmProjects\prometheus\longitudinal_m
                    sheet_name='data')
 # ['brcid', 'diagnosis', 'date', 'score', 'gender', 'med']
 r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
+r_formula = make_smf_formula(covariates=['date', 'age', 'diagnosis', 'gender'], timestamp='date')
 
 # random intercept only
 md = smf.mixedlm(r_formula, df, groups=df['brcid'])
