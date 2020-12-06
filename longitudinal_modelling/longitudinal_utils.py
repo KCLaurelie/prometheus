@@ -35,7 +35,7 @@ class LongitudinalDataset:
         self.min_obs = min_obs
 
     def load_data(self):
-        if type(self.data) == str: # load data if needed
+        if isinstance(self.data, str): # load data if needed
             if 'csv' in self.data :
                 self.data = pd.read_csv(self.data)
             else:
