@@ -1,14 +1,109 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 
-def make_smf_formula(covariates, timestamp=None):
+class LongitudinalDataset:
+    def __init__(self, data, sheet_name=0,  group='brcid', timestamp='date',
+                 target='score', covariates=['age', 'gender'],  # for regression model
+                 to_bucket='age', bucket_min=50, bucket_max=90, interval=0.5, min_obs=3,  # to create groups
+                 ):
+        """
+        create dataset object for trajectories modelling
+        :param data: string or pandas DataFrame. filepath or DataFrame containing longitudinal data.
+        :param sheet_name: integer or string, default 0. if data provided via excel file, name of sheet to load
+        :param group: string. column name from 'data' with group identification (e.g. brcid)
+        :param timestamp: string. key used as time measure (for baseline values, the oldest/smallest timestamp will be used)
+        :param target: string. measure to predict
+        :param covariates: string. list of covariates for prediction modelling
+        :param to_bucket: string. on what variable to bucket the data if applicable (will groupby based on this variable)
+        :param bucket_min: float. min cutoff value for bucketting
+        :param bucket_max: float. max cutoff value for bucketting
+        :param interval: float. interval to use for bucketting (needs to be between bucket_min and bucket_max)
+        :param min_obs: integer, default 3. remove individuals having less than min_obs observations
+        """
+        self.sheet_name = sheet_name
+        self.data = data
+        self.group = group
+        self.timestamp = timestamp
+        self.target = to_list(target)
+        self.covariates = to_list(covariates)
+        self.to_bucket = str(to_bucket)
+        self.bucket_min = bucket_min
+        self.bucket_max = bucket_max
+        self.interval = interval
+        self.min_obs = min_obs
+
+    def load_data(self):
+        if type(self.data) == str: # load data if needed
+            if 'csv' in self.data :
+                self.data = pd.read_csv(self.data)
+            else:
+                self.data = pd.read_excel(self.data, sheet_name=self.sheet_name)
+        cols_to_keep = [self.group] + self.target + self.covariates + \
+                       ([] if self.to_bucket is None else [self.to_bucket])
+        # remove duplicates
+        cols_to_keep = list(set(cols_to_keep))
+        raise_missing = [x for x in cols_to_keep if x not in self.data.columns]
+        if len(raise_missing) > 0:
+            print('columns not found:', raise_missing)
+        else:
+            self.data = self.data[cols_to_keep]
+        return self.data
+
+    def normalize(self, cols_to_normalize=None):
+        if cols_to_normalize is None:
+            cols_to_normalize = [col for col in self.data[self.covariates]._get_numeric_data().columns]
+        scaler = MinMaxScaler()
+        x = self.data[cols_to_normalize].values
+        scaled_values = scaler.fit_transform(x)
+        self.data[cols_to_normalize] = scaled_values
+        return self.data
+
+    def dummyfy(self, cols_to_dummyfy=None):
+        if cols_to_dummyfy is None:
+            cols_to_dummyfy = self.data.select_dtypes(include=['object', 'category']).columns
+        dummyfied_df = pd.get_dummies(self.data[cols_to_dummyfy])
+        self.data = pd.concat([self.data.drop(columns=cols_to_dummyfy), dummyfied_df], axis=1, sort=True)
+        return self.data
+
+    def bucket_data(self):
+        # only use data within bucket boundaries
+        df = self.clean_data()
+        mask_bucket = (df[self.to_bucket] >= self.bucket_min) & (df[self.to_bucket] <= self.bucket_max)
+        df = df.loc[mask_bucket, :]
+        # transform bool cols to "yes"/"no" so they are not averaged out in the groupby
+        bool_cols = [col for col in df.columns if df[col].value_counts().index.isin([0, 1]).all()]
+        if len(bool_cols) > 0: df[bool_cols] = df[bool_cols].replace({0: 'no', 1: 'yes'})
+        # detect numerical and categorical columns
+        categoric_col = [col for col in df.select_dtypes(include=['object', 'category']).columns
+                         if (self.group not in col)]
+        numeric_col = [col for col in df._get_numeric_data().columns if (col != self.group)]
+        # group by buckets
+        bucket_col = self.to_bucket + '_upbound'
+        df[bucket_col] = round_nearest(df[self.to_bucket], self.interval, 'up')
+        # we aggregate by average for numeric variables and baseline value for categorical variables
+        keys = categoric_col + numeric_col
+        values = ['first'] * len(categoric_col) + ['mean'] * len(numeric_col)
+        grouping_dict = dict(zip(keys, values))
+
+        df_grouped = df.groupby([self.group] + [bucket_col], as_index=False).agg(grouping_dict)
+        df_grouped = df_grouped.sort_values([self.group, self.to_bucket])
+
+        df_grouped['occur'] = df_grouped.groupby(self.group)[self.group].transform('size')
+        df_grouped = df_grouped[(df_grouped['occur'] >= self.min_obs)]
+        df_grouped['counter'] = df_grouped.groupby(self.group).cumcount() + 1
+
+        return df_grouped
+
+
+def make_smf_formula(target, covariates, timestamp=None):
     str_cov = ' + '.join(covariates)
     if timestamp is not None:
         str_cov = timestamp + ' + ' + str_cov
         add_slope = ' + ' + timestamp + ' * '
         str_cov += add_slope + add_slope.join(covariates)
-    return str_cov
+    return target + ' ~ ' + str_cov
 
 
 def cut_with_na(to_bin, bins, labels, na_category='not known'):
@@ -87,40 +182,3 @@ def convert_num_to_bucket(nb, bucket_size=0.5, convert_to_str=True):
     res = [lower_bound, upper_bound]
     if convert_to_str: res = str(res)
     return res
-
-
-def bucket_data(df, to_bucket, key='brcid', bucket_min=None, bucket_max=None, interval=None, cols_to_exclude=None,
-                na_values='unknown', min_obs=3, timestamp_cols='score_year'):
-    print("bucketting data (method from parent class)")
-    cols_to_keep = [x for x in df.columns if
-                    x not in to_list(cols_to_exclude)] if cols_to_exclude is not None else df.columns
-    # only use data within bucket boundaries
-    mask_bucket = (df[to_bucket] >= bucket_min) & (df[to_bucket] <= bucket_max)
-    df = df.loc[mask_bucket, cols_to_keep]
-    if na_values is not None: df.fillna(na_values, inplace=True)
-    # transform bool cols to "yes"/"no" so they are not averaged out in the groupby
-    bool_cols = [col for col in df.columns if df[col].value_counts().index.isin([0, 1]).all()]
-    if len(bool_cols) > 0: df[bool_cols] = df[bool_cols].replace({0: 'no', 1: 'yes'})
-    # detect numerical and categorical columns
-    categoric_col = [col for col in df.select_dtypes(include=['object', 'category']).columns if (key not in col)]
-    numeric_col = [col for col in df._get_numeric_data().columns if (col != key)]
-    # group by buckets
-    bucket_col = to_bucket + '_upbound'
-    df[bucket_col] = round_nearest(df[to_bucket], interval, 'up')
-    # we aggregate by average for numeric variables and baseline value for categorical variables
-    keys = categoric_col + numeric_col
-    values = ['first'] * len(categoric_col) + ['mean'] * len(numeric_col)
-    grouping_dict = dict(zip(keys, values))
-
-    df_grouped = df.groupby([key] + [bucket_col], as_index=False).agg(grouping_dict)
-    df_grouped = df_grouped.sort_values([key, to_bucket])
-
-    df_grouped['occur'] = df_grouped.groupby(key)[key].transform('size')
-    df_grouped = df_grouped[(df_grouped['occur'] >= min_obs)]
-    df_grouped['counter'] = df_grouped.groupby(key).cumcount() + 1
-    if timestamp_cols is not None:
-        for x in to_list(timestamp_cols):
-            df_grouped[x + '_upbound'] = round_nearest(df_grouped[x], interval, 'up')
-            df_grouped[x + '_centered'] = df_grouped[x + '_upbound'] - df_grouped[x + '_upbound'].min()
-
-    return df_grouped
