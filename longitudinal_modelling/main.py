@@ -7,7 +7,7 @@ import statsmodels.formula.api as smf
 import statsmodels.regression.mixed_linear_model as mlm
 
 
-data_obj = LongitudinalDataset(data=r'C:\Users\K1774755\PycharmProjects\prometheus\longitudinal_modelling\trajectories_synthetic.xlsm',
+data_obj = LongitudinalDataset(data=r'C:\Users\aurelie\PycharmProjects\prometheus\longitudinal_modelling\trajectories_synthetic.xlsm',
                                sheet_name='data',
                                target='score',
                                group='brcid',
