@@ -20,7 +20,7 @@ framework to fine-tune various algorithms on sentence classification tasks
 
 
 * Free software: MIT license
-* Documentation: https://sentence-classifier.readthedocs.io.
+* Documentation: https://prometheus-am.readthedocs.io
 
 
 Features
