@@ -109,7 +109,8 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
             # Clear out the gradients (by default they accumulate)
             optimizer.zero_grad()
             # Forward pass
-            loss, logits = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
+            outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
+            loss, logits = outputs['loss'], outputs['logits']
             train_loss_set.append(loss.item())
             # Backward pass
             loss.backward()
@@ -150,7 +151,8 @@ def run_BERT(model, train_dataloader, validation_dataloader, n_epochs=5, output_
             b_input_ids, b_input_mask, b_labels = batch
             with torch.no_grad():  # Telling the model not to compute or store gradients, saving memory and speeding up validation
                 # Forward pass, calculate logit predictions
-                (loss, logits) = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
+                outputs = model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
+                loss, logits = outputs['loss'], outputs['logits']
             # Update tracking variables
             tmp_eval_perf = perf_metrics(to_cpu(logits), to_cpu(b_labels), average='weighted')
             tmp_eval_perf.update((k, v * len(b_input_ids)) for k, v in tmp_eval_perf.items())
@@ -300,8 +302,8 @@ def load_and_run_BERT(sentences, trained_bert_model, BERT_tokenizer='bert-base-u
     for step, batch in enumerate(validation_dataloader):
         b_input_ids, b_input_mask, b_labels = batch
         with torch.no_grad():
-            (loss, logits) = trained_bert_model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask,
-                                                labels=b_labels)
+            outputs = trained_bert_model(b_input_ids, token_type_ids=None, attention_mask=b_input_mask, labels=b_labels)
+            loss, logits = outputs['loss'], outputs['logits']
         preds_curr = logits.detach().numpy()
         preds = preds.append(pd.DataFrame(preds_curr), ignore_index=True)
         probs = np.append(probs, np.max(np.exp(preds_curr) / (1 + np.exp(preds_curr)), axis=1))
