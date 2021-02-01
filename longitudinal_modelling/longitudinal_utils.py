@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 class LongitudinalDataset:
     def __init__(self, data, sheet_name=0,  group='brcid', timestamp='date',
                  target='score', covariates=['age', 'gender'],  # for regression model
-                 to_bucket='age', bucket_min=50, bucket_max=90, interval=0.5, min_obs=3,  # to create groups
+                 to_bucket=None, bucket_min=50, bucket_max=90, interval=0.5, min_obs=3,  # to create groups
                  ):
         """
         create dataset object for trajectories modelling
@@ -16,10 +16,10 @@ class LongitudinalDataset:
         :param timestamp: string. key used as time measure (for baseline values, the oldest/smallest timestamp will be used)
         :param target: string. measure to predict
         :param covariates: string. list of covariates for prediction modelling
-        :param to_bucket: string. on what variable to bucket the data if applicable (will groupby based on this variable)
-        :param bucket_min: float. min cutoff value for bucketting
-        :param bucket_max: float. max cutoff value for bucketting
-        :param interval: float. interval to use for bucketting (needs to be between bucket_min and bucket_max)
+        :param to_bucket: string, default None (e.g. 'age'}. on what variable to bucket the data if applicable (will groupby based on this variable)
+        :param bucket_min: float (e.g. 50). min cutoff value for bucketting
+        :param bucket_max: float (e.g. 90). max cutoff value for bucketting
+        :param interval: float (e.g. 0.5). interval to use for bucketting (needs to be between bucket_min and bucket_max)
         :param min_obs: integer, default 3. remove individuals having less than min_obs observations
         """
         self.sheet_name = sheet_name
@@ -27,8 +27,8 @@ class LongitudinalDataset:
         self.group = group
         self.timestamp = timestamp
         self.target = to_list(target)
-        self.covariates = to_list(covariates)
-        self.to_bucket = str(to_bucket)
+        self.covariates = to_list(covariates) if covariates is not None else None
+        self.to_bucket = str(to_bucket) if to_bucket is not None else None
         self.bucket_min = bucket_min
         self.bucket_max = bucket_max
         self.interval = interval
@@ -39,14 +39,18 @@ class LongitudinalDataset:
             if 'csv' in self.data :
                 self.data = pd.read_csv(self.data)
             else:
-                self.data = pd.read_excel(self.data, sheet_name=self.sheet_name)
-        cols_to_keep = [self.group] + self.target + self.covariates + \
-                       ([] if self.to_bucket is None else [self.to_bucket])
+                self.data = pd.read_excel(self.data, sheet_name=self.sheet_name, engine='openpyxl')
+        if self.to_bucket is not None:
+            cols_to_keep = [self.group] + self.target + self.covariates + [self.to_bucket]
+        elif self.covariates is not None:
+            cols_to_keep = [self.group] + self.target + self.covariates
+        else:
+            cols_to_keep = self.data.columns
         # remove duplicates
         cols_to_keep = list(set(cols_to_keep))
         raise_missing = [x for x in cols_to_keep if x not in self.data.columns]
         if len(raise_missing) > 0:
-            print('columns not found:', raise_missing)
+            print('columns not found:', raise_missing, 'all original columns loaded')
         else:
             self.data = self.data[cols_to_keep]
         return self.data

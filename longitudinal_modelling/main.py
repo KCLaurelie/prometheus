@@ -7,20 +7,24 @@ import statsmodels.formula.api as smf
 import statsmodels.regression.mixed_linear_model as mlm
 
 
-data_obj = LongitudinalDataset(data=r'C:\Users\aurelie\PycharmProjects\prometheus\longitudinal_modelling\trajectories_synthetic.xlsm',
+data_obj = LongitudinalDataset(data=r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/trajectories__synthetic.xlsx',
                                sheet_name='data',
                                target='score',
                                group='brcid',
                                covariates=['diagnosis', 'date', 'score', 'gender', 'med'])
-df = data_obj.load_data()
+data_obj2 = LongitudinalDataset(data=r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/honos_traj_20201231_synthetic.xlsx',
+                               target='Cognitive_Problems_Score_ID',
+                               group='brcid',
+                               covariates=['diagnosis', 'age_at_score', 'score_year', 'Cognitive_Problems_Score_ID', 'gender', 'ethnicity'])
+df = data_obj2.load_data()
 #r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
-r_formula = make_smf_formula(target='score', covariates=['age', 'diagnosis', 'gender'], timestamp='date')
+r_formula = make_smf_formula(target='Cognitive_Problems_Score_ID', covariates=['age_at_score', 'diagnosis', 'gender'], timestamp='score_year')
 
 # random intercept only
 md = smf.mixedlm(r_formula, df, groups=df['brcid'])
 
 # random intercept, and random slope (with respect to time)
-md = smf.mixedlm(r_formula, df, groups=df['brcid'], re_formula='~date')
+md = smf.mixedlm(r_formula, df, groups=df['brcid'], re_formula='~score_year')
 
 mdf = md.fit(method=['cg'], reml=True)  # other methods lbfgs bfgs cg
 print(mdf.summary())
