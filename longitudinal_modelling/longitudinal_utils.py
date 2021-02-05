@@ -26,7 +26,7 @@ class LongitudinalDataset:
         self.data = data
         self.group = group
         self.timestamp = timestamp
-        self.target = to_list(target)
+        self.target = target
         self.covariates = to_list(covariates) if covariates is not None else None
         self.to_bucket = str(to_bucket) if to_bucket is not None else None
         self.bucket_min = bucket_min
@@ -41,9 +41,9 @@ class LongitudinalDataset:
             else:
                 self.data = pd.read_excel(self.data, sheet_name=self.sheet_name, engine='openpyxl')
         if self.to_bucket is not None:
-            cols_to_keep = [self.group] + self.target + self.covariates + [self.to_bucket]
+            cols_to_keep = self.covariates + [self.group] + [self.target] + [self.timestamp] + [self.to_bucket]
         elif self.covariates is not None:
-            cols_to_keep = [self.group] + self.target + self.covariates
+            cols_to_keep = self.covariates + [self.group] + [self.target] + [self.timestamp]
         else:
             cols_to_keep = self.data.columns
         # remove duplicates
