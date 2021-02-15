@@ -1,21 +1,23 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+import statsmodels.regression.mixed_linear_model as mlm
 
 class LongitudinalDataset:
     def __init__(self, data, sheet_name=0,  group='brcid', timestamp='date',
-                 target='score', covariates=['age', 'gender'],  # for regression model
+                 target='score', covariates=None,  # for regression model
                  to_bucket=None, bucket_min=50, bucket_max=90, interval=0.5, min_obs=3,  # to create groups
                  ):
         """
         create dataset object for trajectories modelling
-        :param data: string or pandas DataFrame. filepath or DataFrame containing longitudinal data.
+        :param data: string or pandas DataFrame. filepath or DataFrame object containing longitudinal data.
         :param sheet_name: integer or string, default 0. if data provided via excel file, name of sheet to load
-        :param group: string. column name from 'data' with group identification (e.g. brcid)
-        :param timestamp: string. key used as time measure (for baseline values, the oldest/smallest timestamp will be used)
-        :param target: string. measure to predict
-        :param covariates: string. list of covariates for prediction modelling
+        :param group: string, default 'brcid'. column name from data with group identification (e.g. brcid)
+        :param timestamp: string, default 'date'. key used as time measure (for baseline values, the oldest/smallest timestamp will be used)
+        :param target: string, default 'score'. measure to predict
+        :param covariates: string, default None. list of covariates for prediction modelling
         :param to_bucket: string, default None (e.g. 'age'}. on what variable to bucket the data if applicable (will groupby based on this variable)
         :param bucket_min: float (e.g. 50). min cutoff value for bucketting
         :param bucket_max: float (e.g. 90). max cutoff value for bucketting
@@ -108,6 +110,17 @@ def make_smf_formula(target, covariates, timestamp=None):
         add_slope = ' + ' + timestamp + ' * '
         str_cov += add_slope + add_slope.join(covariates)
     return target + ' ~ ' + str_cov
+
+
+def fit_mlm(df, group, target, covariates, timestamp, rdn_slope=True, method=['lbfgs']):
+    r_formula = make_smf_formula(target=target, covariates=covariates, timestamp=timestamp)
+    if rdn_slope:
+        md = smf.mixedlm(r_formula, df, groups=df[group], re_formula='~' + timestamp)
+    else:
+        md = smf.mixedlm(r_formula, df, groups=df[group])
+    mdf = md.fit(method=method, reml=True)  # other methods lbfgs bfgs cg
+    print(mdf.summary().tables[1].loc[pd.to_numeric(mdf.summary().tables[1]['P>|z|']) <= 0.05])
+    return mdf.summary()
 
 
 def cut_with_na(to_bin, bins, labels, na_category='not known'):

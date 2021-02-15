@@ -1,10 +1,6 @@
 # https://www.statsmodels.org/stable/examples/notebooks/generated/mixed_lm_example.html
-
 from longitudinal_modelling.longitudinal_utils import *
 from longitudinal_modelling.data_stats import *
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-import statsmodels.regression.mixed_linear_model as mlm
 
 
 mmse_obj = LongitudinalDataset(
@@ -12,25 +8,27 @@ mmse_obj = LongitudinalDataset(
     , sheet_name='data', target='score_inv', timestamp='date', group='brcid', covariates=['age', 'med', 'gender'])
 honos_obj = LongitudinalDataset(
     data=r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/f20_all_classification_by_year_20200209.xlsx'
-    , sheet_name='traj', target='honos_adjusted_total', timestamp='score_year_centered', group='brcid'
-    , covariates=['age_at_score_baseline', 'nlp_sc_anytime', 'Cognitive_Problems_Score_ID_anytime'
-        , 'nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline', 'nlp_sc', 'Cognitive_Problems_Score_ID'
-        , 'diagnosis', 'education_level', 'gender', 'ethnicity', 'first_language', 'doa', 'marital_status'
-        , 'antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'])
+    , sheet_name='traj', target='honos_adjusted_total', timestamp='score_year_centered', group='brcid')
 
 obj = honos_obj
 df = obj.load_data()
-for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline']:
-    df[col] = np.where(df[col] != 'no', 'yes', 'no')
-for col in ['education_level', 'nlp_sc', 'Cognitive_Problems_Score_ID'
-    , 'nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline'
-    , 'nlp_sc_anytime', 'Cognitive_Problems_Score_ID_anytime']:
-    if col in df.columns: df[col] = np.where(pd.to_numeric(df[col]) > 0, 'yes', 'no')
+for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'
+    , 'education_level', 'ward_total_len', 'nlp_sc', 'nlp_sc_baseline', 'nlp_sc_baseline_cum', 'nlp_sc_anytime'
+    , 'Cognitive_Problems_Score_ID', 'Cognitive_Problems_Score_ID_baseline', 'Cognitive_Problems_Score_ID_anytime']:
+    if df[col].dtype == 'object':
+        df[col] = np.where(df[col] != 'no', 'yes', 'no')
+    else:
+        df[col] = np.where(pd.to_numeric(df[col]) > 0, 'yes', 'no')
 
-# r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
-cov = ['age_at_score_baseline', 'nlp_sc', 'Cognitive_Problems_Score_ID'
+cov = ['age_at_score_baseline', 'nlp_sc_baseline_cum', 'Cognitive_Problems_Score_ID_baseline', 'ward_total_len'
         , 'diagnosis', 'education_level', 'gender', 'ethnicity', 'first_language', 'doa', 'marital_status'
         , 'antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline']
+res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
+(res.tables[0]).to_clipboard(index=False, header=False)
+(res.tables[1]).to_clipboard()
+
+## MANUAL ANALYSIS
+# r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
 r_formula = make_smf_formula(target=obj.target, covariates=cov, timestamp=obj.timestamp)
 
 # random intercept only
@@ -40,8 +38,8 @@ md = smf.mixedlm(r_formula, df, groups=df[obj.group])
 md = smf.mixedlm(r_formula, df, groups=df[obj.group], re_formula='~'+obj.timestamp)
 
 mdf = md.fit(method=['lbfgs'], reml=True)  # other methods lbfgs bfgs cg
-print(mdf.summary())
-(mdf.summary().tables[0]).to_clipboard()
+print(mdf.summary().tables[1].loc[pd.to_numeric(mdf.summary().tables[1]['P>|z|']) <= 0.05])
+(mdf.summary().tables[0]).to_clipboard(index=False, header=False)
 (mdf.summary().tables[1]).to_clipboard()
 
 # fit a model in which the two random effects are constrained to be uncorrelated:
@@ -50,3 +48,5 @@ free = sm.regression.mixed_linear_model.MixedLMParams.from_components(np.ones(2)
 
 mdf = md.fit(free=free, method=['lbfgs'])
 print(mdf.summary())
+
+
