@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-import statsmodels.regression.mixed_linear_model as mlm
+
 
 class LongitudinalDataset:
     def __init__(self, data, sheet_name=0,  group='brcid', timestamp='date',
@@ -101,26 +99,6 @@ class LongitudinalDataset:
         df_grouped['counter'] = df_grouped.groupby(self.group).cumcount() + 1
 
         return df_grouped
-
-
-def make_smf_formula(target, covariates, timestamp=None):
-    str_cov = ' + '.join(covariates)
-    if timestamp is not None:
-        str_cov = timestamp + ' + ' + str_cov
-        add_slope = ' + ' + timestamp + ' * '
-        str_cov += add_slope + add_slope.join(covariates)
-    return target + ' ~ ' + str_cov
-
-
-def fit_mlm(df, group, target, covariates, timestamp, rdn_slope=True, method=['lbfgs']):
-    r_formula = make_smf_formula(target=target, covariates=covariates, timestamp=timestamp)
-    if rdn_slope:
-        md = smf.mixedlm(r_formula, df, groups=df[group], re_formula='~' + timestamp)
-    else:
-        md = smf.mixedlm(r_formula, df, groups=df[group])
-    mdf = md.fit(method=method, reml=True)  # other methods lbfgs bfgs cg
-    print(mdf.summary().tables[1].loc[pd.to_numeric(mdf.summary().tables[1]['P>|z|']) <= 0.05])
-    return mdf.summary()
 
 
 def cut_with_na(to_bin, bins, labels, na_category='not known'):

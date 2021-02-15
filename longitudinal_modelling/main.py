@@ -1,6 +1,8 @@
 # https://www.statsmodels.org/stable/examples/notebooks/generated/mixed_lm_example.html
 from longitudinal_modelling.longitudinal_utils import *
 from longitudinal_modelling.data_stats import *
+from longitudinal_modelling.mlm import *
+from longitudinal_modelling.regression import *
 
 
 mmse_obj = LongitudinalDataset(
@@ -20,7 +22,7 @@ for col in ['antidementia_medication_baseline', 'antidepressant_medication_basel
     else:
         df[col] = np.where(pd.to_numeric(df[col]) > 0, 'yes', 'no')
 
-cov = ['age_at_score_baseline', 'nlp_sc_baseline_cum', 'Cognitive_Problems_Score_ID_baseline', 'ward_total_len'
+cov = ['age_at_score_baseline', 'nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline', 'ward_total_len'
         , 'diagnosis', 'education_level', 'gender', 'ethnicity', 'first_language', 'doa', 'marital_status'
         , 'antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline']
 res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
@@ -30,23 +32,9 @@ res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov, timestamp=
 ## MANUAL ANALYSIS
 # r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
 r_formula = make_smf_formula(target=obj.target, covariates=cov, timestamp=obj.timestamp)
-
-# random intercept only
-md = smf.mixedlm(r_formula, df, groups=df[obj.group])
-
-# random intercept, and random slope (with respect to time)
 md = smf.mixedlm(r_formula, df, groups=df[obj.group], re_formula='~'+obj.timestamp)
+mdf = md.fit(method=['lbfgs'], reml=True)
 
-mdf = md.fit(method=['lbfgs'], reml=True)  # other methods lbfgs bfgs cg
-print(mdf.summary().tables[1].loc[pd.to_numeric(mdf.summary().tables[1]['P>|z|']) <= 0.05])
-(mdf.summary().tables[0]).to_clipboard(index=False, header=False)
-(mdf.summary().tables[1]).to_clipboard()
 
-# fit a model in which the two random effects are constrained to be uncorrelated:
-md = smf.mixedlm(r_formula, df, groups=df['brcid'], re_formula='~date')
-free = sm.regression.mixed_linear_model.MixedLMParams.from_components(np.ones(2), np.eye(2))
-
-mdf = md.fit(free=free, method=['lbfgs'])
-print(mdf.summary())
 
 
