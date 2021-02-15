@@ -177,3 +177,17 @@ def convert_num_to_bucket(nb, bucket_size=0.5, convert_to_str=True):
     res = [lower_bound, upper_bound]
     if convert_to_str: res = str(res)
     return res
+
+
+def dummyfy_med_data(df, cols_to_dummyfy, use_bools=True):
+    val_yes, val_no = [1, 0] if use_bools else ['yes', 'no']
+    for col in cols_to_dummyfy:
+        if df[col].dtype == 'object':
+            if ('no' in df[col].values) or ('NULL' in df[col].values):
+                df[col] = np.where((df[col] != 'no') | (df[col] != 'NULL'), val_yes, val_no)
+            else:
+                dummyfied_col = pd.get_dummies(df[col])
+                df = pd.concat([df.drop(columns=col), dummyfied_col], axis=1, sort=True)
+        else:
+            df[col] = np.where(pd.to_numeric(df[col]) > 0, val_yes, val_no)
+    return df
