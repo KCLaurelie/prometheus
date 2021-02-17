@@ -10,7 +10,7 @@ mmse_obj = LongitudinalDataset(
     , sheet_name='data', target='score_inv', timestamp='date', group='brcid', covariates=['age', 'med', 'gender'])
 honos_obj = LongitudinalDataset(
     data=r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/f20_all_classification_by_year_20200209.xlsx'
-    , sheet_name='traj', target='honos_adjusted_total', timestamp='score_year_centered', group='brcid')
+    , sheet_name='honos', target='honos_adjusted_total', timestamp='score_year_centered', group='brcid')
 
 obj = honos_obj
 df = obj.load_data()
