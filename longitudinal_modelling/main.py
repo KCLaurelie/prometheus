@@ -12,12 +12,16 @@ honos_obj = LongitudinalDataset(
 
 obj = honos_obj
 df = obj.load_data()
+df['ethnicity_bool'] = np.where(df['ethnicity'] == 'white', 'white', 'not_white')
+df['first_language_bool'] = np.where(df['first_language'] == 'english', 'english', 'not_english')
+df['marital_status_bool'] = np.where(df['marital_status'] == 'married_cohabitating', 'married', 'alone')
+
 
 for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication'
-    , 'education_level', 'ward_len_baseline'
-    , 'nlp_sc_baseline', 'nlp_sc_baseline_cum', 'nlp_sc_before_honos'
-    , 'Cognitive_Problems_Score_ID_baseline', 'Cognitive_Problems_Score_ID_before_honos']:
+    , 'education_level', 'ward_len_baseline', 'ward_len'
+    , 'nlp_sc_baseline', 'nlp_sc_baseline_cum', 'nlp_sc_before_honos', 'nlp_sc'
+    , 'Cognitive_Problems_Score_ID_baseline', 'Cognitive_Problems_Score_ID_before_honos', 'Cognitive_Problems_Score_ID']:
     try:
         if df[col].dtype == 'object':
             df[col] = np.where(df[col].str.lower().isin([np.nan, 'no', 'null', 'na', '#n/a']), 'no', 'yes')
@@ -27,17 +31,19 @@ for col in ['antidementia_medication_baseline', 'antidepressant_medication_basel
         print('error for col', col)
 
 cov = ['nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline', 'ward_len_baseline'
-        , 'diagnosis', 'education_level', 'gender', 'ethnicity', 'first_language', 'marital_status'
-        , 'antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline']
+    , 'diagnosis', 'education_level', 'gender'
+    , 'ethnicity_bool', 'first_language_bool', 'marital_status_bool'
+    , 'antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline']
 res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
 (res.tables[0]).to_clipboard(index=False, header=False)
 (res.tables[1]).to_clipboard()
 
 cov_reg = ['nlp_sc', 'Cognitive_Problems_Score_ID', 'ward_len'
-    , 'diagnosis', 'education_level', 'gender', 'ethnicity', 'first_language', 'marital_status'
+    , 'diagnosis', 'education_level', 'gender'
+    , 'ethnicity_bool', 'first_language_bool', 'marital_status_bool'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
 res2 = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp=obj.timestamp
-               , reg_type=LogisticRegression(), dummyfy=True)
+               , reg_type=LinearRegression(), dummyfy=True)
 
 ## MANUAL ANALYSIS
 # r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
