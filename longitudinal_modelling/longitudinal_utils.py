@@ -181,7 +181,7 @@ def convert_num_to_bucket(nb, bucket_size=0.5, convert_to_str=True):
 
 def dummyfy_cris_data(df, cols_to_dummyfy
                       , dummyfied_vals=[1, 0]
-                      , vals_no=('no', 'null', 'na', 'n/a')):
+                      , vals_no=(np.nan, 'no', 'null', 'na', 'n/a')):
     val_yes, val_no = dummyfied_vals
     for col in cols_to_dummyfy:
         if df[col].dtype == 'object':
