@@ -179,18 +179,11 @@ def convert_num_to_bucket(nb, bucket_size=0.5, convert_to_str=True):
     return res
 
 
-def dummyfy_cris_data(df, cols_to_dummyfy
-                      , dummyfied_vals=[1, 0]
-                      , vals_no=(np.nan, 'no', 'null', 'na', 'n/a')):
-    val_yes, val_no = dummyfied_vals
-    for col in cols_to_dummyfy:
-        if df[col].dtype == 'object':
-            df[col] = df[col].str.lower()
-            if any(x in df[col].values for x in vals_no):
-                df[col] = np.where(df[col].isin(vals_no), val_yes, val_no)
-            else:
-                dummyfied_col = pd.get_dummies(df[col])
-                df = pd.concat([df.drop(columns=col), dummyfied_col], axis=1, sort=True)
-        else:
-            df[col] = np.where(pd.to_numeric(df[col]) > 0, val_yes, val_no)
-    return df
+def boolify_col(col_to_boolify
+                , bool_vals=[1, 0], vals_no=(np.nan, 'no', 'null', 'na', '#n/a', 'n/a')):
+    val_yes, val_no = bool_vals
+    if col_to_boolify.dtype == 'object':
+        col_to_boolify = np.where(col_to_boolify.str.lower().isin(vals_no), val_yes, val_no)
+    else:
+        col_to_boolify = np.where(pd.to_numeric(col_to_boolify) > 0, val_yes, val_no)
+    return col_to_boolify

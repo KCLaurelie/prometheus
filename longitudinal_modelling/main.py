@@ -16,38 +16,36 @@ df['ethnicity_bool'] = np.where(df['ethnicity'] == 'white', 'white', 'not_white'
 df['first_language_bool'] = np.where(df['first_language'] == 'english', 'english', 'not_english')
 df['marital_status_bool'] = np.where(df['marital_status'] == 'married_cohabitating', 'married', 'alone')
 
-
 for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication'
-    , 'education_level', 'ward_len_baseline', 'ward_len'
-    , 'nlp_sc_baseline', 'nlp_sc_baseline_cum', 'nlp_sc_before_honos', 'nlp_sc'
-    , 'Cognitive_Problems_Score_ID_baseline', 'Cognitive_Problems_Score_ID_before_honos', 'Cognitive_Problems_Score_ID']:
-    try:
-        if df[col].dtype == 'object':
-            df[col] = np.where(df[col].str.lower().isin([np.nan, 'no', 'null', 'na', '#n/a']), 'no', 'yes')
-        else:
-            df[col] = np.where(pd.to_numeric(df[col]) > 0, 'yes', 'no')
-    except:
-        print('error for col', col)
+    , 'ward_len_baseline', 'nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline']:
+    df[col] = boolify_col(df[col], bool_vals=['yes', 'no'])
 
-cov = ['nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline', 'ward_len_baseline'
-    , 'diagnosis', 'education_level', 'gender'
+cov_mlm = ['Cognitive_Problems_Score_ID_baseline', 'ward_len_baseline', 'nlp_sc_baseline'
+    , 'diagnosis', 'education', 'gender'
     , 'ethnicity_bool', 'first_language_bool', 'marital_status_bool'
     , 'antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline']
-res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
+res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov_mlm, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
 (res.tables[0]).to_clipboard(index=False, header=False)
 (res.tables[1]).to_clipboard()
 
-cov_reg = ['nlp_sc', 'Cognitive_Problems_Score_ID', 'ward_len'
-    , 'diagnosis', 'education_level', 'gender'
+# LINEAR REGRESSION
+df['nlp_sc_bool'] = np.where(df['nlp_sc'] > 0, 1, 0)
+df_reg = df.loc[(df.honos_adjusted_total > 0) & (df.honos_adjusted_total <= 30)]
+
+cov_reg = ['nlp_sc_bool', 'Cognitive_Problems_Score_ID'
+    , 'ward_discharge', 'ward_freq', 'diagnosis', 'education', 'gender'
     , 'ethnicity_bool', 'first_language_bool', 'marital_status_bool'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
-res2 = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp=obj.timestamp
-               , reg_type=LinearRegression(), dummyfy=True)
+res_reg = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp='age_at_score', reg_type='ols', dummyfy_non_num=True)
+(res_reg['model'].summary2().tables[0]).to_clipboard(index=False, header=False)
+(res_reg['model'].summary2().tables[1]).to_clipboard()
+
+
 
 ## MANUAL ANALYSIS
 # r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
-r_formula = make_smf_formula(target=obj.target, covariates=cov, timestamp=obj.timestamp)
+r_formula = make_smf_formula(target=obj.target, covariates=cov_mlm, timestamp=obj.timestamp)
 md = smf.mixedlm(r_formula, df, groups=df[obj.group], re_formula='~'+obj.timestamp)
 mdf = md.fit(method=['lbfgs'], reml=True)
 
