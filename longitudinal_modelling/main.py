@@ -12,10 +12,16 @@ honos_obj = LongitudinalDataset(
 
 obj = honos_obj
 df = obj.load_data()
+
+# DERIVED FIELDS
 df['ethnicity_bool'] = np.where(df['ethnicity'] == 'white', 'white', 'not_white')
 df['first_language_bool'] = np.where(df['first_language'] == 'english', 'english', 'not_english')
 df['marital_status_bool'] = np.where(df['marital_status'] == 'married_cohabitating', 'married', 'alone')
+df['nlp_sc_bool'] = np.where(df['nlp_sc'] > 0, 1, 0)
+df['patient_in_ward'] = np.where(df['ward_len'] > 0, 1, 0)
+df['patient_discharged'] = np.where(df['num_ward_discharges'] > 0, 1, 0)
 
+# TRAJECTORIES MODELLING
 for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication'
     , 'ward_len_baseline', 'nlp_sc_baseline', 'Cognitive_Problems_Score_ID_baseline']:
@@ -29,18 +35,20 @@ res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov_mlm, timest
 (res.tables[0]).to_clipboard(index=False, header=False)
 (res.tables[1]).to_clipboard()
 
-# LINEAR REGRESSION
-df['nlp_sc_bool'] = np.where(df['nlp_sc'] > 0, 1, 0)
+# REGRESSION
 df_reg = df.loc[(df.honos_adjusted_total > 0) & (df.honos_adjusted_total <= 30)]
 
 cov_reg = ['nlp_sc_bool', 'Cognitive_Problems_Score_ID'
-    , 'ward_discharge', 'ward_freq', 'diagnosis', 'education', 'gender'
+    , 'num_ward_discharges', 'num_ward_entries', 'diagnosis', 'education', 'gender'
     , 'ethnicity_bool', 'first_language_bool', 'marital_status_bool'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
 res_reg = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp='age_at_score', reg_type='ols', dummyfy_non_num=True)
 (res_reg['model'].summary2().tables[0]).to_clipboard(index=False, header=False)
 (res_reg['model'].summary2().tables[1]).to_clipboard()
 
+res_reg = fit_reg(df, target='num_ward_entries', covariates=cov_reg, timestamp='age_at_score', reg_type='ols', dummyfy_non_num=True)
+res_reg = fit_reg(df, target='patient_in_ward', covariates=cov_reg, timestamp='age_at_score', reg_type='logit', dummyfy_non_num=True)
+res_reg = fit_reg(df, target='patient_discharged', covariates=cov_reg, timestamp='age_at_score', reg_type='logit', dummyfy_non_num=True)
 
 
 ## MANUAL ANALYSIS

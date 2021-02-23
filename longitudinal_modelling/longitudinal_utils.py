@@ -1,6 +1,51 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from datetime import datetime
+
+
+def date_to_year(start_dt, end_dt):
+    if start_dt.month <= 6:
+        start_int = (pd.Timestamp(start_dt.year, 6, 30) - start_dt).days
+        start_dt_float = start_dt.year
+    else:
+        start_int = (pd.Timestamp(start_dt.year, 12, 31) - start_dt).days
+        start_dt_float = start_dt.year + 0.5
+
+    if end_dt.month <= 6:
+        end_int = (end_dt - pd.Timestamp(end_dt.year - 1, 12, 31)).days
+        end_dt_float = end_dt.year
+    else:
+        end_int = (end_dt - pd.Timestamp(end_dt.year, 6, 30)).days
+        end_dt_float = end_dt.year + 0.5
+
+    if start_dt_float == end_dt_float:
+        dates_list = [end_dt_float]
+        int_list = (end_dt - start_dt).days
+    else:
+        dates_list = list(np.arange(start_dt_float, end_dt_float, 0.5)) + [end_dt_float]
+        int_list = [start_int] + (len(dates_list)-2)*[365/2] + [end_int]
+
+    return pd.DataFrame({'dates': dates_list, 'days': int_list})
+
+def test():
+    df = pd.read_excel(r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/f20_all_classification_by_year_20200209.xlsx', sheet_name='wards', usecols=['BrcId_raw', 'ward_start_date', 'ward_end_date'], engine='openpyxl')
+    df['ward_end_date'] = df['ward_end_date'].fillna(datetime.now())
+    row = df.iloc[0]
+    datetime.strptime('2004-09-29', "%Y-%m-%d")
+
+
+def dates_to_years(df, start_date='ward_start_date', end_date='ward_end_date', ix='BrcId_raw'):
+    res = pd.DataFrame()
+    for index, row in df.iterrows():
+        print(row[ix], row[start_date], row[end_date])
+        start_dt = row[start_date]
+        end_dt = row[end_date]
+        res_tmp = date_to_year(start_dt, end_dt)
+        res_tmp[ix] = row[ix]
+        res = res.append(res_tmp, ignore_index=True)
+    # res = df.apply(date_to_year, axis=1)
+    return res
 
 
 class LongitudinalDataset:
