@@ -1,11 +1,14 @@
-import pandas as pd
-import numpy as np
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import statsmodels.regression.mixed_linear_model as mlm
+from longitudinal_modelling.longitudinal_utils import *
 
 
-def make_smf_formula(target, covariates, timestamp=None):
+def make_smf_formula(target, covariates=None, timestamp=None):
+    if covariates is None:
+        return target + ' ~ ' + timestamp
+
+    covariates = to_list(covariates)
     str_cov = ' + '.join(covariates)
     if timestamp is not None:
         str_cov = timestamp + ' + ' + str_cov
