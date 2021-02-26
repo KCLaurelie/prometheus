@@ -20,20 +20,21 @@ def fit_reg(df, target, covariates, timestamp
             , intercept=True
             , test_size=0, random_state=911, round_stats=None
             , dummyfy_non_num=False,  cols_to_dummyfy=None):
+    df_local = df.copy()
     # GENERATE DUMMY VARIABLES
     if dummyfy_non_num:
         if cols_to_dummyfy is None:
-            cols_to_dummyfy = [col for col in covariates if df[col].dtype == 'object']
+            cols_to_dummyfy = [col for col in covariates if df_local[col].dtype == 'object']
         if len(cols_to_dummyfy) > 0:
             print('columns dummyfied', cols_to_dummyfy)
-            dummyfied_cols = pd.get_dummies(df[cols_to_dummyfy], drop_first=True)
-            covariates = list(dummyfied_cols.columns) + [col for col in covariates if df[col].dtype != 'object']
-            df = pd.concat([df, dummyfied_cols], axis=1, sort=True)
+            dummyfied_cols = pd.get_dummies(df_local[cols_to_dummyfy], drop_first=True)
+            covariates = list(dummyfied_cols.columns) + [col for col in covariates if df_local[col].dtype != 'object']
+            df_local = pd.concat([df_local, dummyfied_cols], axis=1, sort=True)
     # SPLIT TEST/TRAINING SETS
     if test_size > 0:
-        x_train, x_test, y_train, y_test = train_test_split(df[list(covariates) + [timestamp]], df[target], test_size=test_size, random_state=random_state)
+        x_train, x_test, y_train, y_test = train_test_split(df_local[list(covariates) + [timestamp]], df_local[target], test_size=test_size, random_state=random_state)
     else:
-        x_train, y_train = [df[list(covariates) + [timestamp]], df[target]]
+        x_train, y_train = [df_local[list(covariates) + [timestamp]], df_local[target]]
     # FIT REGRESSION
     if intercept: x_train = sm.add_constant(x_train)
     if reg_type == 'ols':  # linear regression from statsmodel
@@ -56,6 +57,7 @@ def fit_reg(df, target, covariates, timestamp
         report = metrics.classification_report(preds_train.astype(int), y_train.astype(int))
     print('training scores:\n', report)
 
+    del df_local
     return {'model': reg_type, 'y_pred': preds_train, 'y_true': y_train, 'report': report}
 
 

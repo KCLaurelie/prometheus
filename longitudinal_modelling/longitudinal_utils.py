@@ -28,12 +28,6 @@ def date_to_year(start_dt, end_dt):
 
     return pd.DataFrame({'dates': dates_list, 'days': int_list})
 
-def test():
-    df = pd.read_excel(r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/f20_all_classification_by_year_20200209.xlsx', sheet_name='wards', usecols=['BrcId_raw', 'ward_start_date', 'ward_end_date'], engine='openpyxl')
-    df['ward_end_date'] = df['ward_end_date'].fillna(datetime.now())
-    row = df.iloc[0]
-    datetime.strptime('2004-09-29', "%Y-%m-%d")
-
 
 def dates_to_years(df, start_date='ward_start_date', end_date='ward_end_date', ix='BrcId_raw'):
     res = pd.DataFrame()
@@ -45,6 +39,10 @@ def dates_to_years(df, start_date='ward_start_date', end_date='ward_end_date', i
         res_tmp[ix] = row[ix]
         res = res.append(res_tmp, ignore_index=True)
     # res = df.apply(date_to_year, axis=1)
+    # df = pd.read_excel(r'/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/f20_all_classification_by_year_20200209.xlsx', sheet_name='wards', usecols=['BrcId_raw', 'ward_start_date', 'ward_end_date'], engine='openpyxl')
+    # df['ward_end_date'] = df['ward_end_date'].fillna(datetime.now())
+    # row = df.iloc[0]
+    # datetime.strptime('2004-09-29', "%Y-%m-%d")
     return res
 
 
