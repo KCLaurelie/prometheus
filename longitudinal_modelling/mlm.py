@@ -19,10 +19,10 @@ def make_smf_formula(target, covariates=None, timestamp=None):
 
 def fit_mlm(df, group, target, covariates, timestamp, rdn_slope=True, method=['lbfgs']):
     df_local = df.copy()
-    for col in covariates:  # convert to categorical variables
-        if sorted(df_local[col].unique()) == [0, 1]:
-            print('converting to categorical:', col)
-            df_local[col] = np.where(df_local[col] == 0, 'no', 'yes')
+    # for col in covariates:  # convert to categorical variables
+    #     if sorted(df_local[col].unique()) == [0, 1]:
+    #         print('converting to categorical:', col)
+    #         df_local[col] = np.where(df_local[col] == 0, 'no', 'yes')
     r_formula = make_smf_formula(target=target, covariates=covariates, timestamp=timestamp)
     if rdn_slope:
         # random intercept, and random slope (with respect to time)

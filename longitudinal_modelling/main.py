@@ -40,9 +40,7 @@ res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov_mlm, timest
 (res.tables[1]).to_clipboard()
 
 # REGRESSION
-cov_reg = ['nlp_num_symptoms'
-    , 'Cognitive_Problems_Score_ID', 'Daily_Living_Problems_Score_ID', 'Hallucinations_Score_ID', 'Living_Conditions_Problems_Score_ID', 'Relationship_Problems_Score_ID'
-    , 'num_ward_entries', 'num_ward_discharges' #, 'patient_in_ward'
+cov_reg = ['nlp_num_symptoms', 'Cognitive_Problems_Score_ID', 'Daily_Living_Problems_Score_ID', 'Hallucinations_Score_ID', 'Living_Conditions_Problems_Score_ID', 'Relationship_Problems_Score_ID'
     , 'has_dementia', 'education', 'gender_male', 'ethnicity_white', 'first_language_EN', 'married_or_cohab', 'employed_or_active'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
 res_reg = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp='age_at_score', reg_type='ols', dummyfy_non_num=True, intercept=False, round_stats=5)
@@ -64,11 +62,10 @@ mdf = md.fit(method=['lbfgs'], reml=True)
 
 X = df[cov_reg + ['age_at_score']]
 model = sm.OLS(df['ward_len'], df[['age_at_score', 'nlp_num_symptoms']]).fit()  # length of admission
+model = sm.OLS(df['ward_len'], df[cov_reg].fillna(0)).fit()  # length of admission
 model = sm.Logit(df['patient_in_ward'], df[['age_at_score', 'nlp_num_symptoms']]).fit()  # admission
 model = sm.Logit(1 * (df['num_ward_entries'] > 1), df[['age_at_score', 'nlp_num_symptoms']]).fit()  # readmission
 
-model = sm.GLM(df['ward_len'], X, family=sm.families.Gamma(link=sm.genmod.families.links.identity)).fit()
-model = sm.GLM(df['ward_len'], X, family=sm.families.Gamma()).fit()
 model = sm.GLM(np.exp(df['ward_len_normalized']), sm.add_constant(X), family=sm.families.Gamma(link=sm.families.links.log())).fit()
 print(model.summary())
 model.summary2().tables[0].append(model.summary2().tables[2]).to_clipboard(index=False, header=False)
