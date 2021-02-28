@@ -41,10 +41,11 @@ def fit_reg(df, target, covariates, timestamp=None
     if round_stats is not None:
         report = metrics.classification_report(round_down(preds_train, round_stats), round_down(y_train, round_stats))
     else:
-        report = metrics.classification_report(preds_train.astype(int), y_train.astype(int))
+        report = metrics.classification_report(np.round(preds_train).astype(int), np.round(y_train).astype(int))
     print('training scores:\n', report)
 
     del df_local
+    print('significant coeffs:\n', fitted_reg.summary2().tables[1].loc[fitted_reg.summary2().tables[1]['P>|z|'] <= 0.05])
     return {'model': fitted_reg, 'y_pred': preds_train, 'y_true': y_train, 'report': report}
 
 

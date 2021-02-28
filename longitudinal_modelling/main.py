@@ -19,14 +19,17 @@ df['married_or_cohab'] = np.where(df['marital_status'] == 'married_cohabitating'
 df['employed_or_active'] = np.where(df['employment'].isin(['employed', 'retired_or_at_home', 'student_or_volunteer']), 1, 0)
 df['nlp_sc_bool'] = np.where(df['nlp_sc'] > 0, 1, 0)
 df['patient_in_ward'] = np.where(df['ward_len'] > 0, 1, 0)
+df['nlp_sc_before'] = np.where(df['nlp_sc_before_honos'] > 0, 1, 0)
 df['patient_discharged'] = np.where(df['num_ward_discharges'] > 0, 1, 0)
 df['ward_len_normalized'] = df['ward_len'] / df['ward_len'].max()
 df['has_dementia'] = np.where(df['diagnosis'] == 'schizo+dementia', 1, 0)
 df['gender_male'] = np.where(df['gender'] == 'male', 1, 0)
+df['gender_female'] = np.where(df['gender'] == 'male', 0, 1)
+
 for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']:
     df[col] = np.where(df[col].str.lower().isin(['no', np.nan, 'null', '#n/a', 0]), 0, 1)
-for col in ['Cognitive_Problems_Score_ID', 'Daily_Living_Problems_Score_ID', 'Hallucinations_Score_ID', 'Living_Conditions_Problems_Score_ID', 'Relationship_Problems_Score_ID']:
+for col in ['Cognitive_Problems_Score_ID', 'Daily_Living_Problems_Score_ID', 'Hallucinations_Score_ID', 'Living_Conditions_Problems_Score_ID', 'Relationship_Problems_Score_ID', 'honos_adjusted_total']:
     df[col+'_bool'] = np.where(df[col] >= 2, 1, 0)
 # df_reg = df.loc[(df.honos_adjusted_total > 0) & (df.honos_adjusted_total <= 30)]
 # df_reg = df.loc[(df.age_at_score >= 18) & (df.age_at_score <= 90)]
@@ -41,14 +44,15 @@ res = fit_mlm(df, group=obj.group, target=obj.target, covariates=cov_mlm, timest
 (res.tables[1]).to_clipboard()
 
 # REGRESSION
-cov_reg = ['nlp_num_symptoms'
-    , 'Cognitive_Problems_Score_ID_bool', 'Daily_Living_Problems_Score_ID_bool', 'Hallucinations_Score_ID_bool', 'Living_Conditions_Problems_Score_ID_bool', 'Relationship_Problems_Score_ID_bool'
+cov_reg = ['nlp_sc_bool'  # 'nlp_sc_bool' 'nlp_num_symptoms'
+    , 'honos_adjusted_total_bool'
+    # , 'Cognitive_Problems_Score_ID_bool', 'Daily_Living_Problems_Score_ID_bool', 'Hallucinations_Score_ID_bool', 'Living_Conditions_Problems_Score_ID_bool', 'Relationship_Problems_Score_ID_bool'
     , 'has_dementia', 'education', 'gender_male', 'ethnicity_white', 'first_language_EN', 'married_or_cohab', 'employed_or_active'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
 res_reg = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False, round_stats=5)
 res_reg = fit_reg(df, target='ward_len', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False, round_stats=5)
-res_reg = fit_reg(df, target='patient_in_ward', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=False)
-res_reg = fit_reg(df, target='patient_discharged', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=False)
+res_reg = fit_reg(df, target='patient_in_ward', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=True)
+res_reg = fit_reg(df, target='patient_discharged', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=True)
 res_reg = fit_reg(df, target='nlp_num_symptoms', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
 
 
