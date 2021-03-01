@@ -45,7 +45,9 @@ def fit_reg(df, target, covariates, timestamp=None
     print('training scores:\n', report)
 
     del df_local
-    print('significant coeffs:\n', fitted_reg.summary2().tables[1].loc[fitted_reg.summary2().tables[1]['P>|z|'] <= 0.05])
+    res = fitted_reg.summary2().tables[1]
+    p_val_col = [col for col in res.columns if 'P>' in col][0]
+    print('significant coeffs:\n', res.loc[res[p_val_col] <= 0.05])
     return {'model': fitted_reg, 'y_pred': preds_train, 'y_true': y_train, 'report': report}
 
 

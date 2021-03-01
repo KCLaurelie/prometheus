@@ -20,11 +20,13 @@ df['employed_or_active'] = np.where(df['employment'].isin(['employed', 'retired_
 df['nlp_sc_bool'] = np.where(df['nlp_sc'] > 0, 1, 0)
 df['patient_in_ward'] = np.where(df['ward_len'] > 0, 1, 0)
 df['nlp_sc_before'] = np.where(df['nlp_sc_before_honos'] > 0, 1, 0)
+df['patient_admitted'] = np.where(df.num_ward_entries > 0, 1, 0)
 df['patient_discharged'] = np.where(df['num_ward_discharges'] > 0, 1, 0)
 df['ward_len_normalized'] = df['ward_len'] / df['ward_len'].max()
 df['has_dementia'] = np.where(df['diagnosis'] == 'schizo+dementia', 1, 0)
 df['gender_male'] = np.where(df['gender'] == 'male', 1, 0)
-df['gender_female'] = np.where(df['gender'] == 'male', 0, 1)
+df['Cognitive_Problems_Score_ID_bad'] = np.where(df['Cognitive_Problems_Score_ID'] >= 3, 1, 0)
+df['readmission'] = 1 * (df['num_ward_entries'] > 1)
 
 for col in ['antidementia_medication_baseline', 'antidepressant_medication_baseline', 'antipsychotic_medication_baseline'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']:
@@ -54,7 +56,7 @@ res_reg = fit_reg(df, target='ward_len', covariates=cov_reg, timestamp='age_at_s
 res_reg = fit_reg(df, target='patient_in_ward', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=True)
 res_reg = fit_reg(df, target='patient_discharged', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=True)
 res_reg = fit_reg(df, target='nlp_num_symptoms', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
-
+res_reg = fit_reg(df, target='num_ward_entries', covariates=['nlp_sc_bool'], timestamp=None, reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
 
 res_reg['model'].summary2().tables[0].append(res_reg['model'].summary2().tables[2]).to_clipboard(index=False, header=False)  # regression goodness of fit stats
 res_reg['model'].summary2().tables[0].to_clipboard(index=False, header=False)  # regression goodness of fit stats
