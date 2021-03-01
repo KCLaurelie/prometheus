@@ -37,18 +37,24 @@ def fit_reg(df, target, covariates, timestamp=None
     fitted_reg = reg_fn(y_train, x_train).fit()
     preds_train = fitted_reg.predict(x_train)
 
-    # GENERATE STATS REPORT
+    # GENERATE STATS REPORTS
     if round_stats is not None:
         report = metrics.classification_report(round_down(preds_train, round_stats), round_down(y_train, round_stats))
     else:
         report = metrics.classification_report(np.round(preds_train).astype(int), np.round(y_train).astype(int))
     print('training scores:\n', report)
 
+    coeffs = fitted_reg.summary2().tables[1]
+    if reg_fn == sm.Logit:
+        coeffs['odds_ratio'] = np.exp(fitted_reg.params)
+        stats = fitted_reg.summary2().tables[0]
+    else:
+        stats = fitted_reg.summary2().tables[0].append(fitted_reg.summary2().tables[2])
+    p_val_col = [col for col in coeffs.columns if 'P>' in col][0]
+    print('significant coeffs:\n', coeffs.loc[coeffs[p_val_col] <= 0.05])
+
     del df_local
-    res = fitted_reg.summary2().tables[1]
-    p_val_col = [col for col in res.columns if 'P>' in col][0]
-    print('significant coeffs:\n', res.loc[res[p_val_col] <= 0.05])
-    return {'model': fitted_reg, 'y_pred': preds_train, 'y_true': y_train, 'report': report}
+    return {'model': fitted_reg, 'y_pred': preds_train, 'y_true': y_train, 'report': report, 'coeffs': coeffs, 'stats': stats}
 
 
 def regression_results(y_true, y_pred):

@@ -53,14 +53,13 @@ cov_reg = ['nlp_sc_bool'  # 'nlp_sc_bool' 'nlp_num_symptoms'
     , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
 res_reg = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False, round_stats=5)
 res_reg = fit_reg(df, target='ward_len', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False, round_stats=5)
-res_reg = fit_reg(df, target='patient_in_ward', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=True)
-res_reg = fit_reg(df, target='patient_discharged', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=True)
+res_reg = fit_reg(df, target='patient_admitted', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=False)
+res_reg = fit_reg(df, target='patient_discharged', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=False)
 res_reg = fit_reg(df, target='nlp_num_symptoms', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
 res_reg = fit_reg(df, target='num_ward_entries', covariates=['nlp_sc_bool'], timestamp=None, reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
 
-res_reg['model'].summary2().tables[0].append(res_reg['model'].summary2().tables[2]).to_clipboard(index=False, header=False)  # regression goodness of fit stats
-res_reg['model'].summary2().tables[0].to_clipboard(index=False, header=False)  # regression goodness of fit stats
-res_reg['model'].summary2().tables[1].to_clipboard()  # coeffs
+res_reg['stats'].to_clipboard(index=False, header=False)  # regression goodness of fit stats
+res_reg['coeffs'].to_clipboard()  # coeffs
 
 ## MANUAL ANALYSIS
 # r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
