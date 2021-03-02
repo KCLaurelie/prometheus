@@ -21,6 +21,7 @@ df['no_dementia'] = np.where(df['diagnosis'] == 'schizo+dementia', 0, 1)
 df['gender_female'] = np.where(df['gender'] == 'male', 0, 1)
 df['readmission'] = 1 * (df['num_ward_entries'] > 1)
 df['ward_len_normalized'] = df['ward_len'] / df['ward_len'].max()
+cov_sociodem = ['gender_female', 'no_dementia', 'education', 'ethnicity_white', 'first_language_EN', 'married_or_cohab', 'employed_or_active']
 cov_meds = ['antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
 cov_scores = ['Cognitive_Problems_Score_ID', 'Daily_Living_Problems_Score_ID', 'Hallucinations_Score_ID', 'Living_Conditions_Problems_Score_ID', 'Relationship_Problems_Score_ID'
     , 'honos_adjusted_total', 'nlp_sc', 'nlp_num_symptoms_before_honos', 'nlp_num_symptoms', 'nlp_attention', 'nlp_cognition', 'nlp_emotion', 'nlp_exec_function', 'nlp_memory'
@@ -32,23 +33,21 @@ for col in cov_scores:
 # df_reg = df.loc[(df.honos_adjusted_total > 0) & (df.honos_adjusted_total <= 30)]
 # df_reg = df.loc[(df.age_at_score >= 18) & (df.age_at_score <= 90)]
 
+# #####################################
 # TRAJECTORIES MODELLING
 df_baseline = df.loc[df.baseline == 1][[obj.group] + [col + '_bool' for col in cov_meds + cov_scores]]
 df = df.join(df_baseline.set_index(obj.group), on=obj.group, rsuffix='_baseline')
 cov_honos_baseline = [col for col in df.columns if 'Score_ID_bool_baseline' in col]
-cov_meds_baseline = [col + '_bool' for col in cov_meds]
-cov_sociodem_baseline = ['gender_female', 'no_dementia', 'education', 'ethnicity_white', 'first_language_EN', 'married_or_cohab', 'employed_or_active']
-cov_mlm = ['nlp_sc_bool_baseline', 'ward_len_bool_baseline']
-res = fit_mlm(df, group=obj.group, target=obj.target, covariates=['nlp_sc_bool_baseline']+cov_sociodem_baseline+cov_meds_baseline, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
+cov_meds_baseline = [col + '_bool_baseline' for col in cov_meds]
+res = fit_mlm(df, group=obj.group, target=obj.target, covariates=['nlp_sc_bool_baseline', 'ward_len_bool_baseline']+cov_sociodem+cov_meds_baseline, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
 (res.tables[0]).to_clipboard(index=False, header=False)
 (res.tables[1]).to_clipboard()
 
+# #####################################
 # REGRESSION
-cov_reg = ['nlp_sc_bool'  # 'nlp_sc_bool' 'nlp_num_symptoms'
-    , 'honos_adjusted_total_bool'
-    # , 'Cognitive_Problems_Score_ID_bool', 'Daily_Living_Problems_Score_ID_bool', 'Hallucinations_Score_ID_bool', 'Living_Conditions_Problems_Score_ID_bool', 'Relationship_Problems_Score_ID_bool'
-    , 'has_dementia', 'education', 'gender_male', 'ethnicity_white', 'first_language_EN', 'married_or_cohab', 'employed_or_active'
-    , 'antidementia_medication', 'antidepressant_medication', 'antipsychotic_medication']
+cov_honos = [col for col in df.columns if ('Score_ID_bool' in col) and ('baseline' not in col)]
+cov_nlp = ['nlp_attention_bool', 'nlp_cognition_bool', 'nlp_emotion_bool', 'nlp_exec_function_bool', 'nlp_memory_bool']
+cov_reg = ['nlp_sc_bool', 'honos_adjusted_total_bool'] + cov_sociodem + [col + '_bool' for col in cov_meds]  # 'nlp_sc_bool' 'nlp_num_symptoms'
 res_reg = fit_reg(df, target=obj.target, covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False, round_stats=5)
 res_reg = fit_reg(df, target='ward_len', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False, round_stats=5)
 res_reg = fit_reg(df, target='num_ward_entries_bool', covariates=cov_reg, timestamp='age_at_score', reg_fn=sm.Logit, dummyfy_non_num=True, intercept=False)
@@ -58,9 +57,10 @@ res_reg = fit_reg(df, target='nlp_num_symptoms', covariates=cov_reg, timestamp='
 res_reg['stats'].to_clipboard(index=False, header=False)  # regression goodness of fit stats
 res_reg['coeffs'].to_clipboard()  # coeffs
 
-## MANUAL ANALYSIS
+# #####################################
+# MANUAL ANALYSIS
 # r_formula = 'score ~  date + age + diagnosis + gender + date * age + date * diagnosis + date * gender'
-r_formula = make_smf_formula(target=obj.target, covariates=cov_mlm, timestamp=obj.timestamp)
+r_formula = make_smf_formula(target=obj.target, covariates=cov_reg, timestamp=obj.timestamp)
 md = smf.mixedlm(r_formula, df, groups=df[obj.group], re_formula='~'+obj.timestamp)
 mdf = md.fit(method=['lbfgs'], reml=True)
 
