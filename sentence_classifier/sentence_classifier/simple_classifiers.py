@@ -11,6 +11,17 @@ from sentence_classifier.sentence_classifier.NLP_utils import *
 
 def prep_classifier_dataset(sentences, labels, emb_model='tfidf', max_features_idf=1000, test_size=0.2, output_dir=None,
                             **kwargs):
+    """
+
+    :param sentences:
+    :param labels:
+    :param emb_model:
+    :param max_features_idf:
+    :param test_size:
+    :param output_dir:
+    :param kwargs: 
+    :return:
+    """
     # classification using tfidf
     if 'tfidf' in str(emb_model).lower():
         print('classification using tfidf')
