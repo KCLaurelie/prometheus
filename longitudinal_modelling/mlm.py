@@ -27,9 +27,10 @@ def fit_mlm(df, group, target, covariates, timestamp, rdn_slope=True, method=['l
         # random intercept only
         md = smf.mixedlm(r_formula, df_local, groups=df_local[group])
     mdf = md.fit(method=method, reml=True)  # other methods lbfgs bfgs cg
-    print(mdf.summary().tables[1].loc[pd.to_numeric(mdf.summary().tables[1]['P>|z|']) <= 0.05])
+    coeffs = mdf.summary().tables[1]
+    print(coeffs.loc[pd.to_numeric(coeffs['P>|z|']) <= 0.05])
     del df_local
-    return mdf.summary()
+    return {'model': mdf, 'stats': mdf.summary().tables[0], 'coeffs': coeffs}
 
 
 def fit_mlm_constraint(df, group, target, covariates, timestamp, rdn_slope=True, method=['lbfgs']):
