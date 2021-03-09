@@ -37,14 +37,14 @@ for col in cov_meds:
     df[col + '_bool'] = np.where(df[col].str.lower().isin(['no', np.nan, 'null', '#n/a', 0]), 0, 1)
 for col in cov_scores:
     if col in df.columns: df[col + '_bool'] = np.where(df[col] >= 1, 1, 0)
-# df_reg = df.loc[(df.honos_adjusted_total > 0) & (df.honos_adjusted_total <= 30)]
-# df_reg = df.loc[(df.age_at_score >= 18) & (df.age_at_score <= 90)]
 
 # #####################################
 # TRAJECTORIES MODELLING
 baseline_cols = [x for x in df.columns if x in ['age_at_score'] + [col + '_bool' for col in cov_meds] + [col + '_bool' for col in cov_scores]]
 df_baseline = df.loc[df.score_year_centered == 1][[obj.group] + baseline_cols]
 df = df.join(df_baseline.set_index(obj.group), on=obj.group, rsuffix='_baseline')
+# df_rest = df.loc[(df.age_at_score >= 40) & (df.age_at_score <= 90)]
+
 cov_honos_baseline = [col for col in df.columns if 'Score_ID_bool_baseline' in col]
 cov_meds_baseline = [col + '_bool_baseline' for col in cov_meds]
 res = fit_mlm(df, group=obj.group, target=obj.target, covariates=['nlp_sc_bool_baseline']+cov_sociodem+cov_meds_baseline, timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
