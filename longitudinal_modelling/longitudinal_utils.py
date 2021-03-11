@@ -77,8 +77,8 @@ class LongitudinalDataset:
         self.interval = interval
         self.min_obs = min_obs
 
-    def load_data(self):
-        if isinstance(self.data, str): # load data if needed
+    def load_data(self, force_load=False):
+        if force_load or isinstance(self.data, str): # load data if needed
             if 'csv' in self.data :
                 self.data = pd.read_csv(self.data)
             else:

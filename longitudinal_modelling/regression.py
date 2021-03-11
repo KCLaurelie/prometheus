@@ -27,6 +27,7 @@ def fit_reg(df, target, covariates, timestamp=None
             dummyfied_cols = pd.get_dummies(df_local[cols_to_dummyfy], drop_first=True)
             covariates = list(dummyfied_cols.columns) + [col for col in covariates if df_local[col].dtype != 'object']
             df_local = pd.concat([df_local, dummyfied_cols], axis=1, sort=True)
+            print('final columns', df_local.columns)
     # SPLIT TEST/TRAINING SETS
     if test_size > 0:
         x_train, x_test, y_train, y_test = train_test_split(df_local[covariates + timestamp], df_local[target], test_size=test_size, random_state=random_state)
