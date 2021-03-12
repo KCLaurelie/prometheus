@@ -107,11 +107,19 @@ class LongitudinalDataset:
         self.data[cols_to_normalize] = scaled_values
         return self.data
 
-    def dummyfy(self, cols_to_dummyfy=None):
+    def dummyfy(self, cols_to_dummyfy=None, force_bool=False, drop=True):
         if cols_to_dummyfy is None:
             cols_to_dummyfy = self.data.select_dtypes(include=['object', 'category']).columns
-        dummyfied_df = pd.get_dummies(self.data[cols_to_dummyfy])
-        self.data = pd.concat([self.data.drop(columns=cols_to_dummyfy), dummyfied_df], axis=1, sort=True)
+        if force_bool:
+            for col in cols_to_dummyfy:
+                most_common = self.data[col].mode()[0]
+                self.data[col+'_'+most_common] = np.where(self.data[col] == most_common, 1, 0)
+        else:
+            dummyfied_df = pd.get_dummies(self.data[cols_to_dummyfy])
+            if drop:
+                self.data = pd.concat([self.data.drop(columns=cols_to_dummyfy), dummyfied_df], axis=1, sort=True)
+            else:
+                self.data = pd.concat([self.data, dummyfied_df], axis=1, sort=True)
         return self.data
 
     def bucket_data(self):
