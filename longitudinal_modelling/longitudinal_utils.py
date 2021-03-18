@@ -108,18 +108,7 @@ class LongitudinalDataset:
         return self.data
 
     def dummyfy(self, cols_to_dummyfy=None, force_bool=False, drop=True):
-        if cols_to_dummyfy is None:
-            cols_to_dummyfy = self.data.select_dtypes(include=['object', 'category']).columns
-        if force_bool:
-            for col in cols_to_dummyfy:
-                most_common = self.data[col].mode()[0]
-                self.data[col+'_'+most_common] = np.where(self.data[col] == most_common, 1, 0)
-        else:
-            dummyfied_df = pd.get_dummies(self.data[cols_to_dummyfy])
-            if drop:
-                self.data = pd.concat([self.data.drop(columns=cols_to_dummyfy), dummyfied_df], axis=1, sort=True)
-            else:
-                self.data = pd.concat([self.data, dummyfied_df], axis=1, sort=True)
+        self.data = dummyfy(self.data, cols_to_dummyfy=cols_to_dummyfy, force_bool=force_bool, drop=drop)
         return self.data
 
     def bucket_data(self):
@@ -238,3 +227,20 @@ def boolify_col(col_to_boolify
     else:
         col_to_boolify = np.where(pd.to_numeric(col_to_boolify) > 0, val_yes, val_no)
     return col_to_boolify
+
+
+def dummyfy(df, cols_to_dummyfy=None, force_bool=False, drop=True):
+    if cols_to_dummyfy is None:
+        cols_to_dummyfy = df.select_dtypes(include=['object', 'category']).columns
+    if force_bool:
+        for col in cols_to_dummyfy:
+            most_common = df[col].mode()[0]
+            df[col+'_'+most_common] = np.where(df[col] == most_common, 1, 0)
+    else:
+        dummyfied_df = pd.get_dummies(df[cols_to_dummyfy])
+        if drop:
+            df = pd.concat([df.drop(columns=cols_to_dummyfy), dummyfied_df], axis=1, sort=True)
+        else:
+            df = pd.concat([df, dummyfied_df], axis=1, sort=True)
+    return df
+
