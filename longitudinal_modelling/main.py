@@ -41,17 +41,18 @@ for col in [col for col in df.columns if 'Score_ID' in col and 'bool' not in col
 
 # #####################################
 # TRAJECTORIES MODELLING
-baseline_cols = cov_honos + ['antipsychotic_medication_bool']  # [x for x in df.columns if x in ['age_at_score', 'age_bucket'] + [col + '_bool' for col in cov_meds] + [col + '_bool' for col in cov_scores]]
+
+baseline_cols = cov_honos + ['age_bucket', 'age_at_score', 'antipsychotic_medication_bool']  # [x for x in df.columns if x in ['age_at_score', 'age_bucket'] + [col + '_bool' for col in cov_meds] + [col + '_bool' for col in cov_scores]]
 df_baseline = df.loc[df.score_year_centered == 1][[obj.group] + baseline_cols]
 df = df.join(df_baseline.set_index(obj.group), on=obj.group, rsuffix='_baseline')
 cov_honos_baseline = [col + '_baseline' for col in cov_honos]
 
+df['fifty_older'] = np.where(df.age_at_score_baseline >= 50, 1, 0)
 df_sampleB = df.loc[df.sample_B == 'yes'].copy()
 
-res = fit_mlm(df, group=obj.group, target='Cognitive_Problems_Score_ID', covariates=cov_sociodem_plus+['antipsychotic_medication_bool_baseline'], timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
-res = fit_mlm(df, group=obj.group, target='nlp_num_symptoms', covariates=cov_sociodem_plus+['antipsychotic_medication_bool_baseline'], timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
-(res['stats']).to_clipboard(index=False, header=False)
-(res['coeffs']).to_clipboard()
+res = fit_mlm(df, group=obj.group, target='Cognitive_Problems_Score_ID', covariates=['fifty_older']+cov_sociodem_plus+['antipsychotic_medication_bool_baseline'], timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
+res = fit_mlm(df, group=obj.group, target='nlp_num_symptoms', covariates=['fifty_older']+cov_sociodem_plus+['antipsychotic_medication_bool_baseline'], timestamp=obj.timestamp, rdn_slope=True, method=['lbfgs'])
+
 
 # #####################################
 # REGRESSION
