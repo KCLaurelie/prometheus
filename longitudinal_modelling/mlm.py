@@ -18,9 +18,14 @@ def make_smf_formula(target, covariates=None, timestamp=None):
 
 
 def fit_mlm(df, group, target, covariates, timestamp, rdn_slope=True, method=['lbfgs']):
-    df_local = df.copy()
+    df_local = df[to_list(group)+to_list(target)+to_list(covariates)+to_list(timestamp)].copy()
+    df_local.dropna(inplace=False)
+    print(len(df)-len(df_local), 'na values dropped')
+    df_local[target] = df_local[target].values.reshape(-1, 1)
+    print('target shape:', df_local[target].shape, 'covariates shape:', df_local[covariates].shape if covariates is not None else 0)
     r_formula = make_smf_formula(target=target, covariates=covariates, timestamp=timestamp)
-    if rdn_slope:
+    print('running', r_formula)
+    if rdn_slope and (timestamp is not None):
         # random intercept, and random slope (with respect to time)
         md = smf.mixedlm(r_formula, df_local, groups=df_local[group], re_formula='~' + timestamp)
     else:
