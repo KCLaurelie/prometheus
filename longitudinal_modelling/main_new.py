@@ -5,31 +5,27 @@ from longitudinal_modelling.regression import *
 ## LOAD DATA
 ###############################################
 xls = pd.ExcelFile('/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
+df_nlp_ci = pd.read_excel(xls, 'nlp_ci').dropna(subset=['score_year'])
 df_pop = pd.read_excel(xls, 'pop')
 df_diag = pd.read_excel(xls, 'diag')
-df_nlp_ci = pd.read_excel(xls, 'nlp_ci')
 df_docs = pd.read_excel(xls, 'f20_docs')
 df_honos = pd.read_excel(xls, 'f20_honos')
 df_ward = pd.read_excel(xls, 'f20_ward')
 df_meds = pd.read_excel(xls, 'f20_meds').fillna('no')
 #   MERGE ALL PARTS TOGETHER
 df_diag = pd.pivot_table(df_diag, values='diag_date', index='brcid', columns='diag', aggfunc=np.max, fill_value=0)
-diag_cols = df_diag.columns+['had_schizo']
+diag_cols = list(df_diag.columns)+['had_schizo']
 df_pop = pd.merge(df_pop, df_diag, how='inner', left_on=['brcid'], right_index=True, suffixes=[None, '_tomerge'])
 # to count absence of doc as absence of symptom
 df_nlp_ci = pd.merge(df_docs, df_nlp_ci,  how='outer', on=['brcid', 'year'], suffixes=[None, '_tomerge']).fillna(0)
+# merge the rest
 df = pd.merge(df_pop, df_nlp_ci,  how='inner', on=['brcid'], suffixes=[None, '_tomerge'])
 df = pd.merge(df, df_honos,  how='outer', on=['brcid', 'year'], suffixes=[None, '_tomerge'])
 df = pd.merge(df, df_ward,  how='left', on=['brcid', 'year'], suffixes=[None, '_tomerge'])
 df['year_rounded'] = np.floor(df['score_year']).astype(int)
 df = pd.merge(df, df_meds,  how='left', left_on=['brcid', 'year_rounded'], right_on=['brcid', 'year'], suffixes=[None, '_tomerge'])
-del df_pop, df_docs, df_nlp_ci, df_honos, df_ward, df_meds
-#   CREATE BASELINE
-df.sort_values(by=['brcid', 'score_year'], ascending=[True, False], inplace=True)
-df['baseline'] = 1*(df.brcid.diff() > 0)
-df.at[0, 'baseline'] = 1
-for col in [col for col in df.columns if '_tomerge' in col]:
-    df[col.replace('_tomerge','')].fillna(df[col], inplace=True)
+del df_pop, df_nlp_ci, df_diag, df_docs, df_honos, df_ward, df_meds
+
 
 ## ADD NEW VARIABLES
 df = dummyfy(df, cols_to_dummyfy=['gender', 'ethnicity', 'employment', 'marital_status', 'education_level', 'housing_status'], drop=False)
@@ -46,26 +42,60 @@ cov_scores = ['Cognitive_Problems_Score_ID', 'honos_adjusted_total', 'nlp_ci', '
 df['readmission'] = 1 * (df['num_ward_entries'] > 1)
 for col in cov_meds:
     df[col + '_bool'] = np.where(df[col].str.lower().isin(['no', np.nan, 'null', '#n/a', 0]), 0, 1)
-for col in cov_scores:
-    df[col + '_bool'] = np.where(df[col].fillna(0) > 0, 1, 0)
+for col in cov_scores+diag_cols:
+    if col in df.columns: df[col + '_bool'] = np.where(df[col].fillna(0) > 0, 1, 0)
 for col in [col for col in df.columns if 'Score_ID' in col and 'bool' not in col]:
     df[col + '_absent'] = np.where(df[col].fillna(0) > 1, 0, 1)
-df['age_at_score'] = np.maximum(10, df.year - df.dob.dt.year)
-df['score_year_centered'] = 1 + np.where(df['baseline'] == 1, 0, df.year.diff())
+diag_bool_cols = [col + '_bool' for col in diag_cols]
+
+# clean age values and drop missing
+df['age_at_score'] = np.maximum(10, df.score_year - df.dob.dt.year.fillna(1900))
+df = df.loc[(df.score_year >= 2000) & (df.score_year < 2021)].copy()
+df = df.dropna(subset=['age_at_score']).copy()
+#   CREATE BASELINE
+df = df.sort_values(by=['brcid', 'score_year'], ascending=[True, True]).reset_index()
+df['counter'] = df.groupby(['brcid']).cumcount()+1
+print('score at baseline', df.loc[df.counter == 1]['nlp_ci'].mean())
+
+df_baseline = df.loc[df.counter == 1][['brcid', 'age_at_score', 'age_bucket']]  # 'antipsychotic']
+df = df.join(df_baseline.set_index('brcid'), on='brcid', rsuffix='_baseline')
+df['score_centered'] = 1 + df.age_at_score - df.age_at_score_baseline
+df['age_rounded'] = np.floor(df.age_at_score / 10) * 10
+
+df['fifty_older'] = np.where(df.age_at_score_baseline >= 50, 1, 0)
+
 
 ###############################################
 # TRAJECTORY ANALYSIS
 ###############################################
-df = df.dropna(subset=['age_at_score']).copy()  # df.dropna(subset=cov_honos).copy()
-df_sampleB = df.loc[df.sample_B == 'yes'].copy()
-baseline_cols = ['brcid', 'antipsychotic', 'age_at_score']
-df_baseline = df.loc[df.score_year_centered == 1][baseline_cols]
-df = df.join(df_baseline.set_index('brcid'), on='brcid', rsuffix='_baseline')
-df['fifty_older'] = np.where(df.age_at_score_baseline >= 50, 1, 0)
+# df_sampleB = df.loc[df.sample_B == 'yes'].copy()
+traj_brcid = df.groupby('brcid', as_index=False).size()
+df_mlm = pd.merge(df, traj_brcid.loc[traj_brcid['size'] >= 3],  how='inner', on=['brcid'], suffixes=[None, '_tomerge'])
 
-res = fit_mlm(df, group='brcid', target='nlp_ci', covariates=['fifty_older']+cov_sociodem_plus+['antipsychotic_baseline'], timestamp='score_year_centered', rdn_slope=True, method=['lbfgs'])
+
+res = fit_mlm(df_mlm, group='brcid', target='nlp_ci', covariates=['fifty_older']+cov_sociodem_plus+diag_bool_cols, timestamp='score_centered', rdn_slope=True, method=['lbfgs'])
+res = fit_mlm(df_mlm, group='brcid', target='nlp_ci', covariates=['age_rounded']+cov_sociodem_plus+diag_bool_cols, timestamp='counter', rdn_slope=True, method=['lbfgs'])
 (res['stats']).to_clipboard(index=False, header=False)
 (res['coeffs']).to_clipboard()
+
+
+def run_all_diag():
+    to_paste = pd.DataFrame()
+    for col in diag_bool_cols:
+        df_tmp = df_mlm.loc[df_mlm[col]==1]
+        print('************', col, '\n')
+        title = pd.DataFrame([res.shape[1] * [col + '_' + str(len(df_tmp))]], columns=res.columns)
+        try:
+            res = fit_mlm(df_tmp, group='brcid', target='nlp_ci', covariates=['age_rounded']+cov_sociodem_plus, timestamp='counter', rdn_slope=True, method=['lbfgs'])['coeffs']
+            to_paste = to_paste.append(title).append(res)
+        except:
+            to_paste = to_paste.append(title)
+
+
 ###############################################
 # REGRESSION ANALYSIS
 ###############################################
+res_reg = fit_reg(df, target='nlp_ci', covariates=cov_sociodem_plus+diag_bool_cols, timestamp='age_at_score', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
+res_reg['stats'].to_clipboard(index=False, header=False)
+res_reg['coeffs'].to_clipboard()
+
