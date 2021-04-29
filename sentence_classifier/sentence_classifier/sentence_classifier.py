@@ -13,8 +13,7 @@ Some examples on how to use the various functions
 
 """# Load data"""
 
-df = pd.read_csv('https://raw.githubusercontent.com/KCLaurelie/prometheus/master/sentence_classifier/sentence_classifier/imdb_5k_reviews.csv',
-                 header=1)
+df = pd.read_csv('https://raw.githubusercontent.com/KCLaurelie/prometheus/master/sentence_classifier/sentence_classifier/imdb_5k_reviews.csv',header=1)
 text_col = 'review'
 label_col = 'sentiment'
 df = df[0:100]

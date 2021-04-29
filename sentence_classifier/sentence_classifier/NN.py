@@ -42,7 +42,8 @@ class RNN(nn.Module):
         x = self.embeddings(x)  # x.shape = batch_size x sequence_length x emb_size
         if self.debug_mode: print('after embedding - x: ', x.shape)
         # Tell RNN to ignore padding and set the batch_first to True (sequence length 1st for historical reasons)
-        x = torch.nn.utils.rnn.pack_padded_sequence(x, mask.sum(1).int(), batch_first=True, enforce_sorted=False)
+        lengths = to_cpu(mask.sum(1).int())
+        x = torch.nn.utils.rnn.pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
         x, hidden = self.rnn(x)  # run 'x' through the RNN
         x, hidden = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True)  # Add the padding again
         # select the value at the length of that sentence (we are only interested in last output) or middle if bidirectional
