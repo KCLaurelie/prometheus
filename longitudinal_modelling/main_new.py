@@ -30,6 +30,7 @@ df['education_above_gcse'] = 1 - df['education_level_no_education']
 df['not_homeless'] = 1 - df['housing_status_homeless_or_not_fixed']
 cov_sociodem_minus = ['gender_male', 'education_level_no_education', 'ethnicity_not_white', 'marital_status_single_separated', 'employment_unemployed', 'housing_status_homeless_or_not_fixed']
 cov_sociodem_plus = ['gender_female', 'education_above_gcse', 'ethnicity_white', 'marital_status_married_cohabitating', 'employment_employed', 'not_homeless']
+cov_sociodem_plus_nlp = ['education_level_no_education' if x == 'education_above_gcse' else x for x in cov_sociodem_plus]
 for col in diag_cols:
     if col in df.columns:
         df[col] = np.where(df[col].fillna(0) > 0, 1, 0)
@@ -108,7 +109,7 @@ res_reg['stats'].to_clipboard(index=False, header=False)
 res_reg['coeffs'].to_clipboard()
 
 
-def run_all_diag_reg(df, target='ward_len', covariates='nlp_ci_bool', timestamp='age_centered', intercept=False):
+def run_all_diag_reg(df, target='ward_len', score='nlp_ci_bool', covariates='cov_sociodem_plus_nlp', timestamp='age_centered', intercept=False):
     to_paste = pd.DataFrame()
     reg_fn = sm.OLS if df[target].max() > 1 else sm.Logit
     for col in diag_cols:
@@ -116,15 +117,15 @@ def run_all_diag_reg(df, target='ward_len', covariates='nlp_ci_bool', timestamp=
         print('************', col, len(df_tmp), ' patients\n')
         title = col + '_' + str(len(df_tmp))
         try:
-            res = fit_reg(df_tmp, target=target, covariates=[covariates], timestamp=None, reg_fn=reg_fn, dummyfy_non_num=True, intercept=intercept)['coeffs']
+            res = fit_reg(df_tmp, target=target, covariates=[score], timestamp=None, reg_fn=reg_fn, dummyfy_non_num=True, intercept=intercept)['coeffs']
             to_paste = to_paste.append(pd.DataFrame([[title]], columns=[res.columns[0]])).append(res)
-            to_paste = to_paste.append(fit_reg(df_tmp, target=target, covariates=[covariates], timestamp=timestamp, reg_fn=reg_fn,dummyfy_non_num=True, intercept=intercept)['coeffs'])
-            to_paste = to_paste.append(fit_reg(df_tmp, target=target, covariates=[covariates] + cov_sociodem_plus, timestamp=timestamp, reg_fn=reg_fn,dummyfy_non_num=True, intercept=intercept)['coeffs'])
+            to_paste = to_paste.append(fit_reg(df_tmp, target=target, covariates=[score], timestamp=timestamp, reg_fn=reg_fn,dummyfy_non_num=True, intercept=intercept)['coeffs'])
+            to_paste = to_paste.append(fit_reg(df_tmp, target=target, covariates=[score] + covariates, timestamp=timestamp, reg_fn=reg_fn,dummyfy_non_num=True, intercept=intercept)['coeffs'])
         except:
             pass
     return to_paste
 
 
-res = run_all_diag_reg(df, target='ward_len', covariates='nlp_ci_bool', timestamp='age_centered', intercept=False)
-res = run_all_diag_reg(df, target='num_ward_entries', covariates='nlp_ci_bool', timestamp='age_centered', intercept=False)
-res[res.index.isin(['nlp_ci_bool', 0])].to_clipboard()
+res = run_all_diag_reg(df, target='ward_len', score='nlp_ci', covariates=cov_sociodem_plus, timestamp='age_centered', intercept=False)
+res = run_all_diag_reg(df, target='num_ward_entries', score='nlp_ci', covariates=cov_sociodem_plus, timestamp='age_centered', intercept=False)
+res[res.index.isin(['nlp_ci', 0])].to_clipboard()
