@@ -15,7 +15,7 @@ def fit_reg(df, target, covariates, timestamp=None
             , reg_fn=sm.OLS
             , intercept=True
             , test_size=0, random_state=911, round_stats=None
-            , dummyfy_non_num=False,  cols_to_dummyfy=None):
+            , dummyfy_non_num=False,  cols_to_dummyfy=None, debug=False):
     df_local = df.copy()
     covariates, target, timestamp = [to_list(covariates), to_list(target), to_list(timestamp)]
     # GENERATE DUMMY VARIABLES
@@ -43,7 +43,7 @@ def fit_reg(df, target, covariates, timestamp=None
         report = metrics.classification_report(round_down(preds_train, round_stats), round_down(y_train, round_stats))
     else:
         report = metrics.classification_report(np.round(preds_train).astype(int), np.round(y_train).astype(int))
-    print('training scores:\n', report)
+    if debug: print('training scores:\n', report)
 
     coeffs = fitted_reg.summary2().tables[1]
     if reg_fn == sm.Logit:
@@ -52,7 +52,7 @@ def fit_reg(df, target, covariates, timestamp=None
     else:
         stats = fitted_reg.summary2().tables[0].append(fitted_reg.summary2().tables[2])
     p_val_col = [col for col in coeffs.columns if 'P>' in col][0]
-    print('significant coeffs:\n', coeffs.loc[coeffs[p_val_col] <= 0.05])
+    if debug: print('significant coeffs:\n', coeffs.loc[coeffs[p_val_col] <= 0.05])
 
     del df_local
     return {'model': fitted_reg, 'y_pred': preds_train, 'y_true': y_train, 'report': report, 'coeffs': coeffs, 'stats': stats}
