@@ -4,26 +4,36 @@ from longitudinal_modelling.regression import *
 ###############################################
 ## LOAD DATA
 ###############################################
-
-diag_cols = ['abuse_neglect','adhd','dementia','depressive','eating','learning','mania_bipolar','mood_other','nervous_syst','other_organic','personality','psychotic','sexual','sleep','stress','substance_abuse']
-df = pd.read_excel('/Users/k1774755/PycharmProjects/prometheus/longitudinal_modelling/honos_traj_20210322.xlsx', 'traj', engine='openpyxl').fillna(0)
-
 try:
     xls = pd.ExcelFile('/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
 except:
     xls = pd.ExcelFile('/Users/k1774755/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
 
+# pre-built Sample C
+df_pop = pd.read_excel(xls, 'traj')
+diag_cols = ['abuse_neglect','adhd','dementia','depressive','eating','learning','mania_bipolar','mood_other','nervous_syst','other_organic','personality','psychotic','sexual','sleep','stress','substance_abuse']
+
+# to rebuild samples
+include_unknown = True # include patients with unknown diagnosis
 df_nlp_ci = pd.read_excel(xls, 'nlp_ci').dropna(subset=['score_year'])
 df_pop = pd.read_excel(xls, 'pop')
 df_diag = pd.read_excel(xls, 'diag')
 df_honos = pd.read_excel(xls, 'honos')
 df_ward = pd.read_excel(xls, 'ward')
 
-# CLEAN SOCIODEM DATA AND ADD NEW VARIABES
 df_diag = pd.pivot_table(df_diag, values='diag_date', index='brcid', columns='diag', aggfunc=np.max, fill_value=0)
 diag_cols = list(df_diag.columns)
-df = pd.merge(df_pop, df_diag, how='inner', left_on=['brcid'], right_index=True, suffixes=[None, '_tomerge'])
+if include_unknown:
+    df = pd.merge(df_pop, df_diag, how='left', left_on=['brcid'], right_index=True, suffixes=[None, '_tomerge'])
+    df['diag_unknown'] = 1 - np.minimum(1, df[diag_cols].sum(axis=1))
+    if len(df['diag_unknown'].unique()) > 1: diag_cols += ['diag_unknown']
+else:
+    df = pd.merge(df_pop, df_diag, how='inner', left_on=['brcid'], right_index=True, suffixes=[None, '_tomerge'])
 del df_pop, df_diag
+
+###############################################
+# CLEAN SOCIODEM DATA AND ADD NEW VARIABLES
+###############################################
 df = dummyfy(df, cols_to_dummyfy=['gender', 'ethnicity', 'employment', 'marital_status', 'education_level', 'housing_status'], drop=False)
 df['ethnicity_not_white'] = 1 - df['ethnicity_white']
 df['education_above_gcse'] = 1 - df['education_level_no_education']
