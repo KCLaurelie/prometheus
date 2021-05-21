@@ -260,3 +260,53 @@ def is_bst(root):
     return is_bst_rec(root, -sys.maxsize - 1, sys.maxsize)
 
 #endregion
+
+#region 7. String segmentation
+"""
+You are given a dictionary of words and a large input string. 
+You have to find out whether the input string can be completely segmented into the words of a given dictionary. 
+e.g.
+Given a dictionary of words: apple apple pear pie
+Input string of “applepie” can be segmented into dictionary words. apple pie
+
+Runtime Complexity: Exponential, O(2^n)
+Memory Complexity: Polynomial, O(n^2)
+"""
+
+def wordBreak(dict, str, out=""):
+    # if the end of the string is reached,
+    # print the output string
+    if not str:
+        print(out)
+        return
+
+    for i in range(1, len(str) + 1):
+        # consider all prefixes of the current string
+        prefix = str[:i]
+
+        # if the prefix is present in the dictionary, add it to the
+        # output string and recur for the remaining string
+        if prefix in dict:
+            wordBreak(dict, str[i:], out + " " + prefix)
+
+dict = ["self", "th", "is", "famous", "Word", "break", "b", "r", "e", "a", "k", "br","bre", "brea", "ak", "problem"]
+wordBreak(dict, "Wordbreakproblem")
+
+#endregion
+
+#region 8. Reverse words in a sentence
+def rev_sentence(sentence):
+    # first split the string into words
+    words = sentence.split(' ')
+
+    # then reverse the split string list and join using space
+    reverse_sentence = ' '.join(reversed(words))
+
+    # finally return the joined string
+    return reverse_sentence
+
+rev_sentence('hello world')
+#endregion
+
+
+#region 9. How many ways to make change with coins, given a total amount
