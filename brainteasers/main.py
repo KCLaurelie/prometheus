@@ -399,3 +399,24 @@ class Solution10(object):
         self.kth_permutation(k, set, res)
 Solution10().kth_permutation(k=4, set=[1,2,3,4,5,6], res='')
 #endregion
+
+#region 11. Find all subsets of a given set of integers
+"""
+given the set [1,2,3]
+the possible subsets are 1, 2, 3, [1,2], [1,3],[2,3],[1,2,3]
+"""
+
+# solution using recursion
+class Solution11(object):
+    def all_subsets(self, set, res=[], to_return=[]):
+        for size_subset in range(len(set)):
+            print('res',res)
+            new_res = res.copy()
+            new_res.append(set[size_subset])
+            new_set = set[size_subset+1:]
+            print('new_res', new_res)
+            to_return.append(new_res)
+            self.all_subsets(new_set, new_res)
+        return to_return
+Solution11().all_subsets(set=[2,3,4])
+#endregion
