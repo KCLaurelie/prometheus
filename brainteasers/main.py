@@ -56,6 +56,7 @@ print(Solution2().find_sum_of_two([3,7,1,2,8,4,5],10))
 """3. Merge two sorted linked lists
 Given two sorted linked lists, merge them so that the resulting linked list is also sorted. 
 Consider two sorted linked lists and the merged list below them as an example.
+
 https://realpython.com/linked-lists-python/
 https://dbader.org/blog/python-linked-list
 
@@ -271,6 +272,9 @@ and is greater than the key values of all nodes in the left subtree
 
 The optimal approach is a regular in-order traversal and in each recursive call, 
 pass maximum and minimum bounds to check whether the current node’s value is within the given bounds.
+
+https://www.geeksforgeeks.org/a-program-to-check-if-a-binary-tree-is-bst-or-not/
+
 Runtime Complexity: Linear, O(n) where n is number of nodes in the binary tree
 Memory Complexity: Linear, O(n)
 """
@@ -357,7 +361,6 @@ Solution8().rev_sentence('hello world')
 You are given coins of different denominations and a total amount of money. 
 Write a function to compute the number of combinations that make up that amount. 
 You may assume that you have an infinite number of each kind of coin.
-https://www.geeksforgeeks.org/coin-change-dp-7/
 
 Input:
   - Amount: 5
@@ -368,6 +371,8 @@ Explanation: There are 4 ways to make up the amount:
   - 5 = 2 + 2 + 1
   - 5 = 2 + 1 + 1 + 1
   - 5 = 1 + 1 + 1 + 1 + 1
+
+https://www.geeksforgeeks.org/coin-change-dp-7/
   
 Runtime Complexity: Quadratic, O(m*n), m=number of coins, m=amount
 Memory Complexity: Linear, O(n)O(n)
