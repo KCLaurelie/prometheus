@@ -2,6 +2,7 @@
 import timeit
 import collections
 import sys
+import math
 
 #region 1. find missing number in array
 """
@@ -159,7 +160,7 @@ print(llist, llist.head, llist.pop_left())
 
 #endregion
 
-#region 4. Copy linked list with arbitrary pointer (TODO)
+#region 4. Deep copy linked list with arbitrary pointer (TODO)
 """
 4. Copy linked list with arbitrary pointer
 You are given a linked list where the node has two pointers. 
@@ -194,7 +195,7 @@ class TreeNode(object):
         self.right = right
 
 
-class Solution(object):
+class Solution5(object):
     def levelOrder(self, root):
         """
         :type root: TreeNode
@@ -219,7 +220,7 @@ root.left = TreeNode(2)
 root.right = TreeNode(3)
 root.left.left = TreeNode(4)
 root.left.right = TreeNode(5)
-Solution().levelOrder(root)
+Solution5().levelOrder(root)
 
 #endregion
 
@@ -308,5 +309,90 @@ def rev_sentence(sentence):
 rev_sentence('hello world')
 #endregion
 
+#region 9. FML!!! Coin change problem (dynamic programming solution)
+"""
+You are given coins of different denominations and a total amount of money. 
+Write a function to compute the number of combinations that make up that amount. 
+You may assume that you have an infinite number of each kind of coin.
+https://www.geeksforgeeks.org/coin-change-dp-7/
 
-#region 9. How many ways to make change with coins, given a total amount
+Input:
+  - Amount: 5
+  - Coins: [1, 2, 5]
+Output: 4
+Explanation: There are 4 ways to make up the amount:
+  - 5 = 5
+  - 5 = 2 + 2 + 1
+  - 5 = 2 + 1 + 1 + 1
+  - 5 = 1 + 1 + 1 + 1 + 1
+  
+Runtime Complexity: Quadratic, O(m*n), m=number of coins, m=amount
+Memory Complexity: Linear, O(n)O(n)
+"""
+
+class Solution9(object):
+    def change(self, amount, coins):
+        solution = [0]*(amount+1)
+        solution[0] = 1 # base case (given value is 0)
+        for coin in coins: #pick all coins one by one
+            for i in range(coin, amount+1):
+                solution[i] += solution[i-coin]
+        return solution
+
+Solution9().change(amount=5,coins=[1,2,5])
+
+def make_change(goal, coins):
+    wallets = [[coin] for coin in coins]
+    new_wallets = []
+    collected = []
+
+    while wallets:
+        for wallet in wallets:
+            s = sum(wallet)
+            for coin in coins:
+                if coin >= wallet[-1]:
+                    if s + coin < goal:
+                        new_wallets.append(wallet + [coin])
+                    elif s + coin == goal:
+                        collected.append(wallet + [coin])
+        wallets = new_wallets
+        new_wallets = []
+    return collected
+
+#endregion
+
+#region Finding 2 numbers from given list that add to a total
+def find_2_nbs_giving_total(total, numbers):
+    n2 = total//2
+    goodnums = {total-x for x in numbers if x<=n2} & {x for x in numbers if x>n2}
+    pairs = {(total-x, x) for x in goodnums}
+    return pairs
+find_2_nbs_giving_total(total=181, numbers= [80, 98, 83, 92, 1, 38, 37, 54, 58, 89])
+#endregion
+
+#region 10. Find k_th permutation
+"""
+given a set of n elements, find the k-th permutation (given permutations are in ascending order
+e.g. for the set 123
+the ordered permutations are: 123, 132, 213, 231, 312, 321
+
+"""
+set=[1,2,3,4,5,6]
+k = 4 # we want the 4th permutation
+nb_permutations = math.factorial(len(set)) # number of permutations using 6 numbers
+nb_ind_permutations = nb_permutations/(len(set))# nb of permutations for each number (factorial n-1)
+first_nb_perm= math.floor(k/nb_ind_permutations) # the kth permutation starts with that number
+class Solution10(object):
+    def kth_permutation(self, k, set, res):
+        if set is None:
+            return
+        n = len(set)
+        nb_ind_permutations = math.factorial(n-1) if n > 0 else 1# nb of permutations for each number
+        perm_group = (k-1)//nb_ind_permutations # the kth permutation starts with that number
+        res = res + str(set[perm_group])
+        # now we want to find permutations in reduced set
+        del set[perm_group]
+        k = k - (nb_ind_permutations*perm_group)
+        self.kth_permutation(k, set, res)
+Solution10.kth_permutation(k=4, set=[1,2,3,4,5,6], res='')
+#endregion
