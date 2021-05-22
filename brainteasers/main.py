@@ -376,23 +376,26 @@ given a set of n elements, find the k-th permutation (given permutations are in 
 e.g. for the set 123
 the ordered permutations are: 123, 132, 213, 231, 312, 321
 
+Runtime Complexity: Linear, O(n)
+Memory Complexity: Linear, O(n)
 """
 set=[1,2,3,4,5,6]
 k = 4 # we want the 4th permutation
 nb_permutations = math.factorial(len(set)) # number of permutations using 6 numbers
-nb_ind_permutations = nb_permutations/(len(set))# nb of permutations for each number (factorial n-1)
+nb_ind_permutations = nb_permutations/(len(set))# nb of permutations for each number (=factorial n-1)
 first_nb_perm= math.floor(k/nb_ind_permutations) # the kth permutation starts with that number
 class Solution10(object):
     def kth_permutation(self, k, set, res):
-        if set is None:
-            return
+        print('set',set,'res',res)
+        if not set: # if set is empty we reached the end of the algo
+            return res
         n = len(set)
-        nb_ind_permutations = math.factorial(n-1) if n > 0 else 1# nb of permutations for each number
+        nb_ind_permutations = math.factorial(n-1) if n > 0 else 1 # nb of permutations starting with each number
         perm_group = (k-1)//nb_ind_permutations # the kth permutation starts with that number
         res = res + str(set[perm_group])
         # now we want to find permutations in reduced set
-        del set[perm_group]
+        set.pop(perm_group)
         k = k - (nb_ind_permutations*perm_group)
         self.kth_permutation(k, set, res)
-Solution10.kth_permutation(k=4, set=[1,2,3,4,5,6], res='')
+Solution10().kth_permutation(k=4, set=[1,2,3,4,5,6], res='')
 #endregion
