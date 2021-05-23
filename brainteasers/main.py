@@ -2,6 +2,7 @@
 import timeit
 import collections
 import math
+from random import randint
 
 #region 1. find missing number in array
 """
@@ -801,3 +802,64 @@ array = [1, 2, 5, 7, 13, 15, 16, 18, 24, 28, 29]
 SolutionBinarySearch().binary_search_rec(element, array)
 #endregion
 
+#region Common sorting algos
+class SolutionSorting(object):
+
+    # Runtime complexity: O(n2) on average
+    def BubbleSort(self, array):
+        n = len(array)
+        if n < 2: return array  # nothing to do
+
+        for i in range(n):
+            already_sorted = True
+
+            for j in range(n-i-1):
+                if array[j] > array[j+1]: # swap elements if not sorted
+                    array[j], array[j + 1] = array[j + 1], array[j]
+                    already_sorted = False
+
+            if already_sorted:
+                break
+
+        return array
+
+    # Runtime complexity: O(n2) on average
+    def InsertionSort(self, array):
+        for i in range(1, len(array)):
+            key_item = array[i]
+            left_ix = i - 1
+
+            # go through left portion of matrix
+            while left_ix >= 0 and array[left_ix] > key_item:
+                array[left_ix+1] = array[left_ix] # shift values
+                left_ix -=1
+            array[left_ix + 1] = key_item
+
+    # Runtime complexity: O(nlogn)
+    def QuickSort(self, array):
+        if len(array) < 2: return array # nothing to do
+
+        low, same, high = [], [], [] # elements smaller than pivot go to low, bigger in high etc...
+        pivot = array[randint(0, len(array)-1)] # select pivot randomly
+
+        for item in array:
+            if item < pivot: low.append(item)
+            elif item == pivot: same.append(item)
+            else: high.append(item)
+        return self.QuickSort(low) + same + self.QuickSort(high)
+
+
+    # Runtime complexity: O(nlogn)
+    # like quicksort but uses middle element as pivot
+    def MergeSort(self, array):
+        if len(array) < 2: return array  # nothing to do
+        midpoint = len(array) // 2
+        left = self.MergeSort(array[:midpoint])
+        right = self.MergeSort(array[midpoint:])
+        # TODO merge left and right
+        return 0
+
+array_to_sort = [randint(0, 1000) for i in range(42)]
+SolutionSorting().QuickSort(array)
+
+#endregion
