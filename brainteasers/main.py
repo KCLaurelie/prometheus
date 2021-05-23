@@ -558,7 +558,7 @@ Solution13().clone_rec(root)
 #region 25 Implement a queue using a linked list TODO
 #endregion
 
-#region 36. egg dropping puzzle for dynamic programming TODO
+#region 36. egg dropping puzzle for dynamic programming [**TO REVISE**]
 """
 https://www.geeksforgeeks.org/egg-dropping-puzzle-dp-11/
 """
@@ -627,7 +627,7 @@ Solution36b().egg_drops(n_eggs=2, n_floors=10)
 
 #endregion
 
-#region 39. knapsack problem TO REVISE
+#region 39. knapsack problem [**TO REVISE**]
 """
 https://www.educative.io/blog/0-1-knapsack-problem-dynamic-solution
 https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/
@@ -716,5 +716,61 @@ Solution39c().solve_knapsack(profits, weights, capacity)
 #endregion
 
 #region 42. Print nth number in the Fibonacci series TODO
+"""
+https://www.geeksforgeeks.org/python-program-for-n-th-fibonacci-number/
+F(n) = F(n-1) + F(n-2)
+F(0) = 0
+F(1) = 1
+[0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144]
+"""
+
+# METHOD1: recursion
+# Runtime complexity: O(2^n)
+# Memory complexity: O(1)
+class Solution42(object):
+    def fibonacci(self, n):
+        if n< 0:
+            pass
+        elif n <= 2:
+            return n-1
+        else:
+            return self.fibonacci(n-1) + self.fibonacci(n-2)
+
+# METHOD2: recursion with memoization
+# Runtime complexity:
+# Memory complexity: O(n)
+class Solution42b(object):
+    def fibonacci(self, n, FibSequence=[0,1]):
+        if n< 0:
+            pass
+        elif n <= len(FibSequence):
+            return FibSequence[n-1]
+        else:
+            newFibNb = self.fibonacci(n-1, FibSequence) + self.fibonacci(n-2, FibSequence)
+            FibSequence.append(newFibNb)
+            return newFibNb
+
+#METHOD3: dynamic programming
+# Runtime complexity: O(n)
+# Memory complexity: O(1)
+class Solution42c(object):
+    def fibonacci(self, n):
+        fib0 = 0
+        fib1 = 1
+        if n < 0:
+            pass
+        elif n <= 2:
+            return n-1
+        else:
+            for i in range(2, n):
+                fibnew = fib0 + fib1
+                fib0 = fib1
+                fib1 = fibnew
+            return fibnew
+
+Solution42().fibonacci(9)
+Solution42b().fibonacci(9)
+Solution42c().fibonacci(9)
+
 #endregion
 
