@@ -774,3 +774,30 @@ Solution42c().fibonacci(9)
 
 #endregion
 
+#region Divide and Conquer
+
+"""
+EARCH ELEMENT IN A SORTED ARRAY
+Binary Search works on a divide-and-conquer approach and relies on the fact that the array is sorted to eliminate half of possible candidates in each iteration. 
+More specifically, it compares the middle element of the sorted array to the element it's searching for in order to decide where to continue the search.
+Runtime complexity: O(logn)
+"""
+
+
+class SolutionBinarySearch(object):
+    def binary_search_rec(self, element, array, start=0, end=None):
+        if end is None: end = len(array) # initializing
+        # recursive loop
+        mid = (start + end) //2
+        if element == array[mid]:
+            return mid
+        elif element <= array[mid]:
+            return self.binary_search_rec(element, array, start, mid-1)
+        else:
+            return self.binary_search_rec(element, array, mid+1, end)
+
+element = 18
+array = [1, 2, 5, 7, 13, 15, 16, 18, 24, 28, 29]
+SolutionBinarySearch().binary_search_rec(element, array)
+#endregion
+
