@@ -559,14 +559,82 @@ Solution13().clone_rec(root)
 #endregion
 
 #region 36. egg dropping puzzle for dynamic programming TODO
+"""
+https://www.geeksforgeeks.org/egg-dropping-puzzle-dp-11/
+"""
+# METHOD1 brut force recursion
+# Runtime complexity: O(2^k) (many subproblems solved repeatedly)
+# Memory Complexity: O(1)
+class Solution36(object):
+    def egg_drops(self, n_eggs, n_floors):
+        if n_floors <= 1 or n_eggs <= 1: return n_floors # base case
+        min = 9223372036854775807
+        for floor in range(1, n_floors+1):
+            res = max(self.egg_drops(n_eggs-1, floor-1),
+                      self.egg_drops(n_eggs, n_floors-floor))
+            if res < min: min = res
+        return min+1
+
+
+# METHOD2 recursion + memoization
+# Runtime complexity: O(n*k^2)
+# Memory Complexity: O(n*k)
+class Solution36b(object):
+    def egg_drops_rec(self, n_eggs, n_floors, memo):
+        if memo[n_eggs][n_floors] != -1: return memo[n_eggs][n_floors]
+        if n_floors <= 1 or n_eggs <= 1: return n_floors
+
+        # recursion
+        min = 9223372036854775807
+        for floor in range(1, n_floors+1):
+            res = max(self.egg_drops_rec(n_eggs-1, floor-1, memo),
+                      self.egg_drops_rec(n_eggs, n_floors-floor, memo))
+            if res < min: min = res
+        memo[n_eggs][n_floors] = min + 1
+        return min+1
+
+    def egg_drops(self, n_eggs, n_floors):
+        memo = [[-1 for x in range(n_floors + 1)] for x in range(n_eggs + 1)]
+        return self.egg_drops_rec(n_eggs, n_floors, memo)
+
+
+# METHOD3 dynamic programming
+# Runtime complexity: O(n*k^2)
+# Memory Complexity: O(n*k)
+class Solution36c(object):
+    def egg_drops(self, n_eggs, n_floors, min = 32767):
+        memo = [[0 for x in range(n_floors + 1)] for x in range(n_eggs + 1)]
+
+        for egg in range(1, n_eggs+1): # for 1 floor, 1 trial is needed, for 0 floors, 0 trial needed
+            memo[egg][1] = 1
+            memo[egg][0] = 0
+        for floor in range(1, n_floors+1): # for 1 egg, we need n_floors trials
+            memo[1][floor] = floor
+        # recursion
+
+        for egg in range(2, n_eggs+1):
+            for floor in range(2, n_floors+1):
+                memo[egg][floor] = min
+                for floor_int in range(1, floor):
+                    res = 1 + max(memo[egg-1][floor_int-1], memo[egg][floor-floor_int])
+                    if res < memo[egg][floor]: memo[egg][floor] = res
+
+        return memo[egg][floor]
+
+
+Solution36().egg_drops(n_eggs=2, n_floors=10)
+Solution36b().egg_drops(n_eggs=2, n_floors=10)
+
 #endregion
 
-#region 39. knapsack problem TODO
+#region 39. knapsack problem TO REVISE
 """
 https://www.educative.io/blog/0-1-knapsack-problem-dynamic-solution
 https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/
 to trace elements: https://codereview.stackexchange.com/questions/125374/solution-to-the-0-1-knapsack-in-python
 """
+
+
 # METHOD1: using recursion (slow)
 # Runtime complexity: O(2^n), due to the number of calls with overlapping subcalls
 # Memory Complexity: Constant, O(1)
@@ -588,6 +656,7 @@ class Solution39(object):
     def solve_knapsack(self, profits, weights, capacity):
         return self.knapsack_rec(profits, weights, capacity, curr_item=0)
 
+
 # METHOD2: using dynamic programming
 # Runtime complexity: O(n*capacity)
 # Memory Complexity: Constant, O(n*capacity)
@@ -608,6 +677,7 @@ class Solution39b(object):
                 else: states[item][curr_C] = states[item-1][curr_C]
         print('final state:', states)
         return states[nb_items][curr_C]
+
 
 # METHOD3: using recursion + memoization technique to remove redundant states
 # # uses 2D arrays to store particular states (nb_irems, weights) to avoid computing redundant states
@@ -634,6 +704,7 @@ class Solution39c(object):
         # We initialize the matrix with -1 at first.
         states_init = [[-1 for i in range(capacity + 1)] for j in range(nb_items + 1)]
         return self.knapsack_rec(profits, weights, capacity, curr_item=nb_items, states=states_init)
+
 
 profits, weights, capacity = [[60, 100, 20], [1, 2, 3], 5]
 Solution39().solve_knapsack(profits, weights, capacity)
