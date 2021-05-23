@@ -564,7 +564,84 @@ Solution13().clone_rec(root)
 #region 39. knapsack problem TODO
 """
 https://www.educative.io/blog/0-1-knapsack-problem-dynamic-solution
+https://www.geeksforgeeks.org/0-1-knapsack-problem-dp-10/
+to trace elements: https://codereview.stackexchange.com/questions/125374/solution-to-the-0-1-knapsack-in-python
 """
+# METHOD1: using recursion (slow)
+# Runtime complexity: O(2^n), due to the number of calls with overlapping subcalls
+# Memory Complexity: Constant, O(1)
+class Solution39(object):
+    def knapsack_rec(self, profits, weights, capacity, curr_item):
+        # stop condition
+        if curr_item >= len(profits) or capacity <= 0:
+            return 0
+        weight_curr_item = weights[curr_item]
+        if weight_curr_item > capacity: # if weight of nth item bigger than the capacity then we exclude it
+            return self.knapsack_rec(profits, weights, capacity, curr_item+1)
+        else: # take the best solution between including curr_item or not
+            profit_with_curr_item = profits[curr_item] \
+                                    + self.knapsack_rec(profits, weights, capacity - weight_curr_item, curr_item + 1)
+
+            profit_wo_curr_item = self.knapsack_rec(profits, weights, capacity, curr_item + 1)
+            return max(profit_wo_curr_item, profit_with_curr_item)
+
+    def solve_knapsack(self, profits, weights, capacity):
+        return self.knapsack_rec(profits, weights, capacity, curr_item=0)
+
+# METHOD2: using dynamic programming
+# Runtime complexity: O(n*capacity)
+# Memory Complexity: Constant, O(n*capacity)
+class Solution39b(object):
+    def solve_knapsack(self, profits, weights, capacity):
+        nb_items = len(profits)
+        states = [[0 for i in range(capacity + 1)] for j in range(nb_items + 1)]
+        # build states table in bottle up manner
+        for item in range(nb_items+1):
+            for curr_C in range(capacity+1):
+                if item <= 0 or curr_C <= 0: states[item][curr_C] = 0
+                elif weights[item-1] <= curr_C:
+                    profit_with_new_item = profits[item - 1] + states[item - 1][curr_C - weights[item - 1]]
+                    if profit_with_new_item > states[item-1][curr_C]:
+                        print('item picked', item -1, profits[item-1], weights[item-1])
+                        states[item][curr_C] = profit_with_new_item
+                    else: states[item][curr_C] = states[item-1][curr_C]
+                else: states[item][curr_C] = states[item-1][curr_C]
+        print('final state:', states)
+        return states[nb_items][curr_C]
+
+# METHOD3: using recursion + memoization technique to remove redundant states
+# # uses 2D arrays to store particular states (nb_irems, weights) to avoid computing redundant states
+# Runtime complexity: O(n*capacity)
+# Memory Complexity: Constant, O(n*capacity)
+class Solution39c(object):
+    def knapsack_rec(self, profits, weights, capacity, curr_item, states):
+        if curr_item <= 0 or capacity <= 0:
+            return 0
+        if states[curr_item][capacity] != -1:
+            pass
+        if weights[curr_item-1] <= capacity:
+            states[curr_item][capacity] = max(
+                profits[curr_item-1] + self.knapsack_rec(profits, weights, capacity-weights[curr_item-1], curr_item-1, states),
+                self.knapsack_rec(profits, weights, capacity, curr_item - 1, states))
+        else:
+            states[curr_item][capacity] = self.knapsack_rec(profits, weights, capacity, curr_item - 1, states)
+
+        print(states)
+        return states[curr_item][capacity]
+
+    def solve_knapsack(self, profits, weights, capacity):
+        nb_items = len(profits)
+        # We initialize the matrix with -1 at first.
+        states_init = [[-1 for i in range(capacity + 1)] for j in range(nb_items + 1)]
+        return self.knapsack_rec(profits, weights, capacity, curr_item=nb_items, states=states_init)
+
+profits, weights, capacity = [[60, 100, 20], [1, 2, 3], 5]
+Solution39().solve_knapsack(profits, weights, capacity)
+Solution39b().solve_knapsack(profits, weights, capacity)
+Solution39c().solve_knapsack(profits, weights, capacity)
+
+
+
 #endregion
 
 #region 42. Print nth number in the Fibonacci series TODO
