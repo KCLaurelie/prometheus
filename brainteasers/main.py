@@ -550,6 +550,39 @@ root.neighbors = DGNode(3)
 Solution13().clone_rec(root)
 #endregion
 
+#region 16. K largest elements from an arrays
+"""
+https://www.geeksforgeeks.org/k-largestor-smallest-elements-in-an-array/
+"""
+#METHOD1 Using sorting
+#Runtime complexity: O(nlogn) (n: size of array)
+class Solution16(object):
+    def klargest(self, array, k):
+        size=len(array)
+        array.sort()
+        return array[len(array)-k:len(array)]
+
+#METHOD2 Usining min heap (optimization of method 1)
+#Runtime complexity: O(k+(n-k)logk) (n: size of array)
+class Solution16b(object):
+    def klargest(self, array, k):
+        size = len(array)
+
+        # create min heap of k elements with priority queue
+        minHeap = array[0:k].copy()
+
+        for i in range(k, size):
+            minHeap.sort()
+            if array[i] > minHeap[0]:
+                minHeap.pop(0)
+                minHeap.append(array[i])
+
+        return minHeap
+
+Solution16().klargest(array=[1, 23, 12, 9, 30, 2, 50], k=3)
+Solution16b().klargest(array=[1, 23, 12, 9, 30, 2, 50], k=3)
+#endregion
+
 #region 17 Convert a Binary tree to a Doubly Linked List TODO
 #endregion
 
@@ -557,6 +590,50 @@ Solution13().clone_rec(root)
 #endregion
 
 #region 25 Implement a queue using a linked list TODO
+"""
+https://www.geeksforgeeks.org/queue-linked-list-implementation/
+
+QUEUE: FIFO
+In a Queue data structure, we maintain two pointers, front and rear. The front points the first item of queue and rear points to last item.
+enQueue() This operation adds a new node after rear and moves rear to the next node.
+deQueue() This operation removes the front node and moves front to the next node.
+
+Runtime Complexity: Time complexity of both operations enqueue() and dequeue() is O(1)
+"""
+# Linked list node
+class LLNode:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+class Queue:
+    def __init__(self):
+        self.front = self.rear = None
+
+class Solution25(object):
+    def enQueue(self, queue, item):
+        nodeitem = LLNode(item)
+        if queue.rear is None:
+            queue.front = queue.rear = nodeitem
+        else:
+            queue.rear.next = nodeitem
+            queue.rear = nodeitem
+        print("Queue Rear ", str(queue.rear.data))
+
+    def deQueue(self, queue):
+        if (queue.rear is None) or (queue.front is None):
+            print('queue is empty')
+            return
+        else:
+            tmp = queue.front
+            queue.front = tmp.next
+        print("Queue Rear ", str(queue.rear.data))
+
+q = Queue()
+qobj = Solution25()
+qobj.enQueue(queue=q, item=10)
+qobj.enQueue(queue=q, item=20)
+qobj.deQueue(queue=q)
+
 #endregion
 
 #region 36. egg dropping puzzle for dynamic programming [**TO REVISE**]
@@ -716,7 +793,7 @@ Solution39c().solve_knapsack(profits, weights, capacity)
 
 #endregion
 
-#region 42. Print nth number in the Fibonacci series TODO
+#region 42. Print nth number in the Fibonacci series
 """
 https://www.geeksforgeeks.org/python-program-for-n-th-fibonacci-number/
 F(n) = F(n-1) + F(n-2)
