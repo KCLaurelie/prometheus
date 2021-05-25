@@ -968,7 +968,6 @@ Memory complexity:
 """
 #endregion
 
-
 #region Simple Negex
 """
 find mentions of suicide in text and check if they are negated or not"""
@@ -1135,4 +1134,27 @@ def get_unordered_anagram_count(string):
     return count
 
 get_unordered_anagram_count('mom')
+
+
+from collections import Counter
+
+def sherlockAndAnagrams(s):
+    all_subs = []
+    # get all possible substrings of s
+    # for anagrams, order doesn't matter so we will sort all substrings
+    # if 2 substrings are anagrams they will now be the same
+    for i in range(1,len(s)):
+        for j in range(0,len(s)-i+1):
+            sub = s[j:j+i]
+            all_subs.append(''.join(sorted(sub)))  #to sort substring alphabetically
+
+    # now we count how many times appears each substring. if >1 then it has an anagram
+    count = Counter(all_subs)
+    count_ana = {k:v for k,v in count.items() if v>1}
+    # if a substring appears v times, then we can make 1+2+...+v-1 anagrams out of it
+    # 1+2+...+v-1 = sum(range(v))
+    return sum(sum(range(v)) for v in count.values())
+
+s = 'abba'
+sherlockAndAnagrams(s)
 #endregion
