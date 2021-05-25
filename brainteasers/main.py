@@ -1090,7 +1090,6 @@ arr = [[1, 2, 3, 0, 0],
        [1, 1, 0, 1, 0]]
 #endregion
 
-
 #region ransom
 note = 'hello i am zelda'.split()
 magazine = 'hello my name is zelda and i am cool and awesome'.split()
@@ -1112,4 +1111,28 @@ def checkMagazine(magazine, note):
         print('No')
 
 checkMagazine(magazine, note)
-#endreion
+#endregion
+
+#region Count anagrams in string
+def get_all_substrings(input_string):
+    length = len(input_string)
+    return [input_string[i:j + 1] for i in range(length) for j in range(i, length)]
+
+def get_unordered_anagram_count(string):
+    allsubs = get_all_substrings(string)
+    subsorted = [sorted(x) for x in allsubs]
+    subsorted.sort()
+    print(subsorted)
+    count = 0;
+    curr_count = 0;
+    for j in range(len(subsorted) - 1):
+        if subsorted[j] == subsorted[j + 1]:
+            curr_count += 1
+            count += curr_count
+        else:
+            curr_count = 0
+
+    return count
+
+get_unordered_anagram_count('mom')
+#end region
