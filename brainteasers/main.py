@@ -3,6 +3,7 @@ import timeit
 import collections
 import math
 from random import randint
+import re
 
 #region 1. find missing number in array
 """
@@ -939,4 +940,77 @@ class SolutionSorting(object):
 array_to_sort = [randint(0, 1000) for i in range(42)]
 SolutionSorting().QuickSort(array)
 
+#endregion
+
+#region HeapSort
+"""
+https://www.geeksforgeeks.org/heap-sort/
+A Binary Heap is a Complete Binary Tree where items are stored in a special order 
+such that the value in a parent node is greater(or smaller) than the values in its two children nodes. 
+The former is called max heap and the latter is called min-heap.
+
+Runtime complexity: O(nlogn) (complexity of heapify: O(logn)
+Memory complexity: 
+"""
+#endregion
+
+
+#region Simple Negex
+"""
+find mentions of suicide in text and check if they are negated or not"""
+target = 'suicid'
+context_words = 5
+context_chars=20
+neg_terms = ['no', "n't", 'deni', 'deny']
+string = 'he patient denies having suicidal thoughts. This was not an intentional overdose. ' \
+         'She has been suicidal in the past. Suicidal ideation was not intentional. ' \
+         'blabla random sentence???? ' \
+         'another random stuff'
+
+
+class SolutionNegex(object):
+    # WORKING ON WORDS
+    def negex_words(self, string, target, neg_terms=['no', "n't"], context_words=5):
+        sentences = [snt.lower().split() for snt in re.split('[.,!?;]', string)]
+        neg=[]
+        for word_list in sentences:
+            idx_lst = [i for i, word in enumerate(word_list) if target in word] # find if suicide words used
+            if idx_lst == []:
+                neg.append('no_word')
+            else:
+                for idx in idx_lst:
+                    context_list = word_list[max(0,idx-context_words):min(len(word_list), idx+context_words)]
+                    context_str = ''.join(context_list)
+                    neg.append(max([neg in context_str for neg in neg_terms]))
+                    print(context_str, neg)
+        return [sentences, neg]
+
+    #WORKING ON STRINGS
+    def negex_chars(self, string, target, neg_terms=['no', "n't"], context_chars=20):
+        idx_lst = [i for i in range(len(string)) if string.lower().startswith(target, i)]
+        print(idx_lst)
+        res=[]
+        for ix in idx_lst:
+            context_str = string[max(0,ix-context_chars):min(len(string),ix+context_chars+len(target))]
+            neg = max([neg in context_str for neg in neg_terms])
+            print(context_str, neg)
+            res.append([context_str, neg])
+        return 0
+
+SolutionNegex().negex_words(string, target, neg_terms = ['no', "n't", 'deni', 'deny'])
+SolutionNegex().negex_chars(string, target, neg_terms = ['no', "n't", 'deni', 'deny'])
+
+#endregion
+
+#region FizzBuzz
+def fizz_buzz(num):
+    string = ''
+    if num % 3 == 0: string +='Fizz'
+    if num % 5 == 0: string +='Buzz'
+    return string if string else num
+
+
+if __name__ == "__main__":
+    for n in range(1, 5):
+        print(fizz_buzz(n))
 #endregion
