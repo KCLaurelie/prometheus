@@ -590,6 +590,19 @@ Solution16b().klargest(array=[1, 23, 12, 9, 30, 2, 50], k=3)
 #region 21. Implement a stack with push(), min(), and pop() in O(1)O(1) time TODO
 #endregion
 
+#region 22. Rotate an array by K
+
+def rotLeft(a, d):
+    if d > len(arr):
+        d = d % len(arr)
+    print(d)
+    return arr[d:]+arr[0:d]
+
+arr = [1, 2, 3, 4, 5, 6]
+rotLeft(arr, 14)
+
+#endregion
+
 #region 25 Implement a queue using a linked list TODO
 """
 https://www.geeksforgeeks.org/queue-linked-list-implementation/
@@ -942,7 +955,7 @@ SolutionSorting().QuickSort(array)
 
 #endregion
 
-#region HeapSort
+#region HeapSort TODO
 """
 https://www.geeksforgeeks.org/heap-sort/
 A Binary Heap is a Complete Binary Tree where items are stored in a special order 
@@ -1023,4 +1036,55 @@ if __name__ == '__main__':
     n = int(input().strip())
 
     fizzBuzz(n)
+#endregion
+
+#region NY Chaos
+def minimumBribes(q):
+    orig_queue=list(range(1,len(q)+1))
+    diff = [o_i - i for o_i, i in zip(orig_queue, q)]
+    #print(diff)
+    if max(diff) <=-2:
+        print('Too chaotic')
+    else:
+        print(-(sum(x for x in diff if x < 0)))
+
+# optimized
+def minimumBribesb(q):
+    # Write your code here
+    bribes = 0
+    for i in range(len(q)-1,-1,-1):
+        if q[i] - (i + 1) > 2:
+            print('Too chaotic')
+            return
+        for j in range(max(0, q[i] - 2),i):
+            if q[j] > q[i]:
+                bribes += 1
+    print(bribes)
+
+q = [1,2,3,5,4,6,7,8]
+q = [4,1,2,3,5,6,7,8]
+q = [2, 1, 5, 3, 4]
+
+#endregion
+
+#region minimum swaps to order a list
+def minimumSwaps(arr):
+    swaps = 0
+    n = len(arr)
+
+    for idx in range(n):
+        while arr[idx] - 1 != idx:  # check if element in its right place
+            ele = arr[idx]  # this is the misplaced element
+            arr[ele - 1], arr[idx] = arr[idx], arr[ele - 1]  # we swap it back where it belongs
+            swaps += 1  # and increase the swap counter
+    return swaps
+minimumSwaps([1,2,3,5,4,6,7,8])
+#endreion
+
+#region hourglass array
+arr = [[1, 2, 3, 0, 0],
+       [0, 0, 0, 0, 0],
+       [2, 1, 4, 0, 0],
+       [0, 0, 0, 0, 0],
+       [1, 1, 0, 1, 0]]
 #endregion
