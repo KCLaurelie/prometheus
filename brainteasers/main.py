@@ -1039,7 +1039,7 @@ if __name__ == '__main__':
     fizzBuzz(n)
 #endregion
 
-#region NY Chaos
+#region bribes in queue - NY Chaos
 def minimumBribes(q):
     orig_queue=list(range(1,len(q)+1))
     diff = [o_i - i for o_i, i in zip(orig_queue, q)]
@@ -1080,7 +1080,7 @@ def minimumSwaps(arr):
             swaps += 1  # and increase the swap counter
     return swaps
 minimumSwaps([1,2,3,5,4,6,7,8])
-#endreion
+#endregion
 
 #region hourglass array
 arr = [[1, 2, 3, 0, 0],
@@ -1135,4 +1135,4 @@ def get_unordered_anagram_count(string):
     return count
 
 get_unordered_anagram_count('mom')
-#end region
+#endregion
