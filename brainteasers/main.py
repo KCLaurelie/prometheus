@@ -1013,4 +1013,14 @@ def fizz_buzz(num):
 if __name__ == "__main__":
     for n in range(1, 5):
         print(fizz_buzz(n))
+
+def fizzBuzz(n):
+    # Write your code here
+    for i in range(1, n+1):
+        print("Fizz"*(i%3==0) + "Buzz"*(i%5==0) or i)
+
+if __name__ == '__main__':
+    n = int(input().strip())
+
+    fizzBuzz(n)
 #endregion
