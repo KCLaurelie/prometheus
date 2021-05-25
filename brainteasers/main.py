@@ -4,6 +4,7 @@ import collections
 import math
 from random import randint
 import re
+from collections import Counter
 
 #region 1. find missing number in array
 """
@@ -1088,3 +1089,27 @@ arr = [[1, 2, 3, 0, 0],
        [0, 0, 0, 0, 0],
        [1, 1, 0, 1, 0]]
 #endregion
+
+
+#region ransom
+note = 'hello i am zelda'.split()
+magazine = 'hello my name is zelda and i am cool and awesome'.split()
+
+def checkMagazine0(magazine, note):
+    for word in note:
+        if word not in magazine:
+            print('No')
+            return
+        else:
+            magazine.remove(word)
+    print('Yes')
+
+# faster
+def checkMagazine(magazine, note):
+    if Counter(note) - Counter(magazine) == {}:
+        print('Yes')
+    else:
+        print('No')
+
+checkMagazine(magazine, note)
+#endreion
