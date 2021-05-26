@@ -1239,3 +1239,21 @@ def freqQuery(queries):
     return res
 queries=[[1,1],[2,2],[3,2],[1,1],[1,1],[2,1],[3,2]]
 #endregion
+
+#region Fraud detection
+
+# SUPER SLOW
+def med(expenditure, d):
+    lastd = sorted(expenditure[:d])
+    return lastd[d//2] if d % 2 == 1 else ((lastd[d//2] + lastd[d//2-1])/2)
+
+def activityNotifications(expenditure, d):
+    # Write your code here
+    notif = 0
+    for i in range(d, len(expenditure)-1):
+        if expenditure[i] >= 2*med(expenditure, i):
+            notif += 1
+    return notif
+res = activityNotifications(expenditure=[2, 3, 4, 2, 3 ,6 ,8 ,4, 5], d=5)
+res = activityNotifications(expenditure=[10,20,30,40,50], d=3)
+#endregion
