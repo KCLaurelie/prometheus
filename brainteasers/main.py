@@ -1256,4 +1256,25 @@ def activityNotifications(expenditure, d):
     return notif
 res = activityNotifications(expenditure=[2, 3, 4, 2, 3 ,6 ,8 ,4, 5], d=5)
 res = activityNotifications(expenditure=[10,20,30,40,50], d=3)
+
+# FASTER
+# https://www.martinkysel.com/hackerrank-fraudulent-activity-notifications-solution/
+# https://shareablecode.com/snippets/python-solution-for-hackerrank-problem-fraudulent-activity-notifications-FuHR-WX84
+from bisect import bisect_left, insort_left
+def activityNotifications(expenditure, d):
+    # Write your code here
+    notif = 0
+    lastd = sorted(expenditure[:d]) # sort expenditures for first d-days window
+    for day, exp in enumerate(expenditure):
+        if day < d: continue
+        # compute the median
+        median = lastd[d//2] if d % 2 == 1 else ((lastd[d//2] + lastd[d//2-1])/2)
+        if exp >= median*2:
+            notif +=1
+        # remove previous element and add new element in median window
+        del lastd[bisect_left(lastd, expenditure[day - d])]
+        insort_left(lastd, exp)
+
+    return notif
+
 #endregion
