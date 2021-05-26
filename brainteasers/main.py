@@ -1167,26 +1167,26 @@ https://www.geeksforgeeks.org/number-gp-geometric-progression-subsequences-size-
 """
 from collections import defaultdict
 def countTriplets(arr, r):
-    n = len(arr)
     res = 0
-
     # keep track of left and right elements
     left = defaultdict(lambda:0) #to store arra[elem]/r
     right = defaultdict(lambda:0) #to store arra[elem]*r
 
     # count the nb f occurences of each element present in the arrays
-    for elem in range(n):
-        right[arr[elem]] +=1
+    for elem in arr:
+        right[elem] +=1
 
-    for elem in range(n):
-        c1,c2 = 0,0
-        if arr[elem] % r == 0: c1 = left[arr[elem]//r]
-        right[arr[elem]] -= 1
-        c2 = right[arr[elem]*r]
-        res += c1*c2
-        left[arr[elem]] +=1
+    for elem in arr:
+        cl, cr = 0, 0  # initialize counters
+        if elem % r == 0: # if divisible by ratio
+            cl = left[elem//r]  # count elements in left hash
+        right[elem] -= 1  # remove from right hash
+        left[elem] += 1  # increase count in left hash
+        cr = right[elem*r]  # count candidate elements in right hash
 
+        res += cl * cr
     return res
 
-arr = [1, 2, 6, 2, 3, 6, 9, 18, 3, 9]
+arr = [3, 1, 2, 6, 2, 3, 6, 9, 18, 3, 9]
+countTriplets(arr, r=3)
 #endregion
