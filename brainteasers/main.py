@@ -552,7 +552,7 @@ root.neighbors = DGNode(3)
 Solution13().clone_rec(root)
 #endregion
 
-#region 16. K largest elements from an arrays
+#region 16. find K largest elements from an array
 """
 https://www.geeksforgeeks.org/k-largestor-smallest-elements-in-an-array/
 """
@@ -867,7 +867,7 @@ Solution42c().fibonacci(9)
 
 #endregion
 
-#region Divide and Conquer
+#region Divide and Conquer (binary search of given element in an array)
 
 """
 EARCH ELEMENT IN A SORTED ARRAY
@@ -1081,7 +1081,7 @@ def minimumSwaps(arr):
 minimumSwaps([1,2,3,5,4,6,7,8])
 #endregion
 
-#region hourglass array
+#region hourglass array TODO
 arr = [[1, 2, 3, 0, 0],
        [0, 0, 0, 0, 0],
        [2, 1, 4, 0, 0],
@@ -1089,7 +1089,7 @@ arr = [[1, 2, 3, 0, 0],
        [1, 1, 0, 1, 0]]
 #endregion
 
-#region ransom
+#region Ransom pb (find if string could have been written using another string)
 note = 'hello i am zelda'.split()
 magazine = 'hello my name is zelda and i am cool and awesome'.split()
 
@@ -1157,4 +1157,36 @@ def sherlockAndAnagrams(s):
 
 s = 'abba'
 sherlockAndAnagrams(s)
+#endregion
+
+#region Count geometric progression triplets in list
+"""
+You are given an array and you need to find number of tripets of indices  
+such that the elements at those indices are in geometric progression of ratio r
+https://www.geeksforgeeks.org/number-gp-geometric-progression-subsequences-size-3/
+"""
+from collections import defaultdict
+def countTriplets(arr, r):
+    n = len(arr)
+    res = 0
+
+    # keep track of left and right elements
+    left = defaultdict(lambda:0) #to store arra[elem]/r
+    right = defaultdict(lambda:0) #to store arra[elem]*r
+
+    # count the nb f occurences of each element present in the arrays
+    for elem in range(n):
+        right[arr[elem]] +=1
+
+    for elem in range(n):
+        c1,c2 = 0,0
+        if arr[elem] % r == 0: c1 = left[arr[elem]//r]
+        right[arr[elem]] -= 1
+        c2 = right[arr[elem]*r]
+        res += c1*c2
+        left[arr[elem]] +=1
+
+    return res
+
+arr = [1, 2, 6, 2, 3, 6, 9, 18, 3, 9]
 #endregion
