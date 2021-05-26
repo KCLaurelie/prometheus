@@ -1190,3 +1190,52 @@ def countTriplets(arr, r):
 arr = [3, 1, 2, 6, 2, 3, 6, 9, 18, 3, 9]
 countTriplets(arr, r=3)
 #endregion
+
+#region Common element in 2 strings?
+# METHOD 1 This is too slow
+def twoStrings(s1, s2):
+    # Write your code here
+    l1 = len(s1)
+    l2 = len(s2)
+
+    for i in range(l1):
+        for j in range(i + 1, l1 + 1):
+            stem = s1[i:j]
+            if stem in s2:
+                return "YES"
+    return "NO"
+# METHOD 2 using set
+def twoStrings(s1, s2):
+    set1 = set(s1) #converting string to set
+    set2 = set(s2)
+    if set.intersection(set1,set2):
+        return "YES"
+    else:
+        return "NO"
+#endregion
+
+#region Parse queries
+from collections import defaultdict
+def freqQuery(queries):
+    res = []
+    cnt = dict()
+    freq = defaultdict(int)
+
+    for x in queries:
+        ops, value = x
+        initial = cnt.get(value, 0)
+
+        if ops == 3:
+                res.append(1 if freq.get(value) else 0)
+        elif ops == 1: # insert the element
+              freq[initial] -= 1
+              cnt[value] = initial + 1
+              freq[cnt.get(value,0)] += 1
+        else: # remove 1 occurence of the element if exists
+                freq[initial] -= 1
+                if initial: cnt[value] -= 1
+                freq[cnt.get(value,0)] += 1
+        print('cnt', cnt, 'freq', freq)
+    return res
+queries=[[1,1],[2,2],[3,2],[1,1],[1,1],[2,1],[3,2]]
+#endregion
