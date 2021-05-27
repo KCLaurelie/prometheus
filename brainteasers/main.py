@@ -1334,6 +1334,7 @@ def longestSubstring(s1, s2):
 #endregion
 
 #region common child between strings (longest common substring if deleting elems allowed
+# NOT THE FASTEST
 def commonChild(s1, s2):
     # Write your code here
     l1, l2 = len(s1), len(s2)
@@ -1347,4 +1348,81 @@ def commonChild(s1, s2):
                     max(lengths[i1 + 1][i2], lengths[i1][i2 + 1])
 
     return lengths[-1][-1]
-#end region
+
+#endregion
+
+#region Count deletions needed to remove matching adjacent characters in string
+def alternatingCharacters(s):
+    # Write your code here
+    i=0
+    num_del=0
+    while i < len(s)-1:
+        if s[i]==s[i+1]: # while consecutive elements are equal
+            s = s[0 : i : ] + s[i + 1 : :] # remove second element
+            num_del+=1 #increment number of deletions
+        else: # otherwise move to next element
+            i+=1
+    return num_del
+#endregion
+
+#region Sherlock valid string
+#https://www.martinkysel.com/hackerrank-sherlock-and-valid-string-solution/
+def isValid(s):
+    char_map = Counter(s)
+    char_occurence_map = Counter(char_map.values())
+
+    if len(char_occurence_map) == 1:
+        return "YES"
+
+    if len(char_occurence_map) == 2:
+        k1, k2 = char_occurence_map.keys()
+        v1, v2 = char_occurence_map.values()
+
+        # there is exactly 1 extra symbol and it can be deleted
+        if (k1 == 1 and v1 == 1) or (k2 == 1 and v2 == 1):
+            return "YES"
+
+        # the is exactly 1 symbol that occurs an extra 1 time
+        if (k1 == k2 + 1 and v1 == 1) or (k2 == k1 + 1 and v2 == 1):
+            return "YES"
+    return "NO"
+#endregion
+
+#region All substrings of string
+def subString(s):
+    n = len(s)
+    res = []
+    for i in range(n):
+        for _len in range(i + 1, n + 1):
+            res.append(s[i: _len])
+            print(s[i: _len])
+s = "abcd"
+subString(s)
+#endregion
+
+#region All Special substrings of string
+"""
+Special string defined by
+All of the characters are the same, e.g. aaa.
+All characters except the middle one are the same, e.g. aadaa
+"""
+def substrCount(s):
+    count = n = len(s)
+    for i, char in enumerate(s):
+        diff_char_idx = None
+        for j in range(i + 1, n):
+            if char == s[j]:
+                if diff_char_idx is None:
+                    count += 1
+                elif j - diff_char_idx == diff_char_idx - i:
+                    count += 1
+                    break
+            else:
+                if diff_char_idx is None:
+                    diff_char_idx = j
+                else:
+                    break
+    return count
+
+substrCount('mnonopoo')
+#endregion
