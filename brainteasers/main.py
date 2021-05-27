@@ -1278,3 +1278,30 @@ def activityNotifications(expenditure, d):
     return notif
 
 #endregion
+
+#region Lily's homework
+# https://www.martinkysel.com/hackerrank-lilys-homework-solution/
+# Problem reformulation:
+# The sum is minimal if the array is sorted
+# So we need to count the number of swaps to sort the array (both ascending and descending)
+
+def cntSwaps(arr):
+    pos = sorted(list(enumerate(arr)), key=lambda e: e[1]) # sort the array and key indices
+    swaps = 0
+    for idx in range(len(arr)):
+        while True: #loop until everything is at the right place
+            if pos[idx][0] == idx: # already at the right position, exit the loop
+                break
+            else:
+                swaps += 1
+                swapped_idx = pos[idx][0]
+                pos[idx], pos[swapped_idx] = pos[swapped_idx], pos[idx]
+    return swaps
+
+def lilysHomework(arr):
+    # Write your code here
+    # Run the count of swaps on both ascending and descending arrays
+    return min(cntSwaps(arr), cntSwaps(arr[::-1]))
+
+arr = [2, 5, 3, 1]
+#endregion
