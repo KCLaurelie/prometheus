@@ -1316,3 +1316,35 @@ def makeAnagram(a, b):
     deletions = delete_from_a + delete_from_b
     return len(list(deletions.elements()))
 #endregion
+
+#region longest common substring
+def longestSubstring(s1, s2):
+    # Write your code here
+    answer = ""
+    len1, len2 = len(s1), len(s2)
+    for i in range(len1):
+        match = ""
+        for j in range(len2):
+            if (i + j < len1 and s1[i + j] == s2[j]):
+                match += s2[j]
+            else:
+                if (len(match) > len(answer)): answer = match
+                match = ""
+    return len(answer)
+#endregion
+
+#region common child between strings (longest common substring if deleting elems allowed
+def commonChild(s1, s2):
+    # Write your code here
+    l1, l2 = len(s1), len(s2)
+    lengths = [[0 for j in range(l2 + 1)] for i in range(l1 + 1)]
+    for i1, el1 in enumerate(s1):
+        for i2, el2 in enumerate(s2):
+            if el1 == el2:
+                lengths[i1 + 1][i2 + 1] = lengths[i1][i2] + 1
+            else:
+                lengths[i1 + 1][i2 + 1] = \
+                    max(lengths[i1 + 1][i2], lengths[i1][i2 + 1])
+
+    return lengths[-1][-1]
+#end region
