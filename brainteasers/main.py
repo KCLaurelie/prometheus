@@ -5,6 +5,7 @@ import math
 from random import randint
 import re
 from collections import Counter
+from collections import defaultdict
 
 #region 1. find missing number in array
 """
@@ -1215,7 +1216,7 @@ def twoStrings(s1, s2):
 #endregion
 
 #region Parse queries
-from collections import defaultdict
+
 def freqQuery(queries):
     res = []
     cnt = dict()
@@ -1304,4 +1305,14 @@ def lilysHomework(arr):
     return min(cntSwaps(arr), cntSwaps(arr[::-1]))
 
 arr = [2, 5, 3, 1]
+#endregion
+
+#region how many elements t delete to make anagrams?
+def makeAnagram(a, b):
+    cnt_a = Counter(a)
+    cnt_b = Counter(b)
+    delete_from_a = cnt_a - cnt_b
+    delete_from_b = cnt_b - cnt_a
+    deletions = delete_from_a + delete_from_b
+    return len(list(deletions.elements()))
 #endregion
