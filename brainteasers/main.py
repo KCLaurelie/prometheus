@@ -6,6 +6,7 @@ from random import randint
 import re
 from collections import Counter
 from collections import defaultdict
+from itertools import groupby
 
 #region 1. find missing number in array
 """
@@ -1403,9 +1404,10 @@ subString(s)
 #region All Special substrings of string
 """
 Special string defined by
-All of the characters are the same, e.g. aaa.
-All characters except the middle one are the same, e.g. aadaa
+All of the characters are the same, e.g. aaa. (case A)
+All characters except the middle one are the same, e.g. aadaa (case B)
 """
+# METHOD1
 def substrCount(s):
     count = n = len(s)
     for i, char in enumerate(s):
@@ -1423,6 +1425,26 @@ def substrCount(s):
                 else:
                     break
     return count
+#METHOD2 using groupby
+
+def substrCount(s):
+    n = len(s)
+    cpt_a = cpt_b = 0
+
+    # count the number of cases A
+    a_cases = [len(list(g)) for k, g in groupby(s)]
+    cpt_a = sum([i*(i+1)//2 for i in a_cases])
+
+    # count the number of cases B
+    for i in range(1, n-1):
+        skip = 1
+        if s[i-skip] == s[i] or s[i+skip] == s[i]:
+            continue # already counted in case A, move back to top of lfor oop
+        match = s[i-skip]
+        while i-skip > -1 and i+skip < n and s[i-skip] == s[i+skip] == match:
+            cpt_b += 1
+            skip += 1
+    return cpt_a+cpt_b
 
 substrCount('mnonopoo')
 #endregion
