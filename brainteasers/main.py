@@ -1470,3 +1470,24 @@ def luckBalance(nb_lost_ones, contests):
     return zeros+ones_lost-ones_won
 
 #endregion
+
+#region Greedy florist
+"""
+Group of k people want to buy all flowers in shop
+After the flower bought, the price of each following flower increases by i 
+(price of nth bough flower = n*price)
+"""
+costs = [1, 3, 5, 7, 9, 10, 10]
+k=3
+# expected answer: 10+10+9 + 2*7 + 2*5 + 2*3 + 3*1 = 62
+def getMinimumCost(k, costs):
+    total_cost=0
+    incr=1
+    costs.sort(reverse=True)
+    total_cost += sum(costs[0:k])
+    for idx, c in enumerate(costs[k:]):
+        if idx % k == 0: incr += 1
+        print(idx, incr,c)
+        total_cost += incr*c
+    return total_cost
+        #endregion
