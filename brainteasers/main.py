@@ -1490,4 +1490,27 @@ def getMinimumCost(k, costs):
         print(idx, incr,c)
         total_cost += incr*c
     return total_cost
-        #endregion
+#endregion
+
+#region Min Max array
+"""
+You are given a list of integers arr and a single integer n.
+You must create an array of length n from arr such that the difference between its max and min is minimum
+"""
+arr = [1,2,3,4,10,20,30,40,100,200]
+k=4
+# solution: selecting [1,2,3,4] gives max diff=3
+
+arr = [100,200,300,350,400,401,402]
+k=3
+# solution: selecting [400,401,402] gives max diff=2
+def maxMin(k, arr):
+    arr.sort()
+    min_diff=arr[len(arr)-1]-arr[0]
+    for idx in range(len(arr)-k+1):
+        curr_diff = arr[idx+k-1]-arr[idx]
+        print(idx, arr[idx:idx+k], curr_diff)
+        if curr_diff<min_diff:
+            min_diff=curr_diff
+    return min_diff
+#endregion
