@@ -1450,34 +1450,23 @@ substrCount('mnonopoo')
 #endregion
 
 #region Luck balance
+"""
+Lena passes a series of test of [Luck_i, Importance_i]
+Initially, her luck balance is 0.
+For each test she fails, ker luck increases by L[i] to her balance
+She can fail at max k important tests
+If Lena fails k important contests, what is the max amount of luck she can have
+"""
 contests = [[5, 1], [2, 1], [1, 1], [8, 1], [10, 0], [5, 0]]
+nb_lost_ones = k = 3
 contests = [[13, 1],[10, 1],[9, 1],[8, 1],[13 ,1],[12, 1],[18, 1],[13, 1]]
 nb_lost_ones = k = 5
-def LuckBalance(contests, nb_lost_ones):
+def luckBalance(nb_lost_ones, contests):
     zeros = sum([el[0] for el in contests if el[1]==0])
     ones = [el for el in contests if el[1]==1]
     ones.sort(reverse=True)
     ones_won = sum([el[0] for el in ones[nb_lost_ones:][:]])
     ones_lost = sum([el[0] for el in ones[:nb_lost_ones][:]])
-    return -zeros-ones_won+ones_lost
+    return zeros+ones_lost-ones_won
 
-def luckBalance(k, contests):
-    balance = 0
-    ls_important = []
-    for i in range(n):
-        li,ti = contests[i]
-        if ti == 0:
-            balance += li
-        else:
-            ls_important.append(li)
-    ls_important.sort()
-    if len(ls_important)>k:
-        for i in range(len(ls_important)-k):
-            balance -= ls_important[i]
-        for i in range(len(ls_important)-k, len(ls_important)):
-            balance += ls_important[i]
-    elif len(ls_important)<=k:
-        for i in range(len(ls_important)):
-            balance += ls_important[i]
-    return balance
 #endregion
