@@ -1456,8 +1456,8 @@ nb_lost_ones = 5
 def LuckBalance(contests, nb_lost_ones):
     zeros = sum([el[0] for el in contests if el[1]==0])
     ones = [el for el in contests if el[1]==1]
-    ones.sort()
+    ones.sort(reverse=True)
     ones_won = sum([el[0] for el in ones[nb_lost_ones:][:]])
     ones_lost = sum([el[0] for el in ones[:nb_lost_ones][:]])
-    return zeros+ones_won-ones_lost
+    return -zeros-ones_won+ones_lost
 #endregion
