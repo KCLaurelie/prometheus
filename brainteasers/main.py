@@ -1569,3 +1569,70 @@ def candies(arr):
 
 
 #endregion
+
+#region Abbreviations
+a = "AbcDE"
+b = "ABDE"
+b="AFDE"
+
+def abbreviation(a,b):
+    if set(b.lower())-set(a.lower()) == set():
+        print("YES")
+    else:
+        print("NO")
+
+q = int(input().strip())
+for q_itr in range(q):
+    a = input()
+    b = input()
+    result = abbreviation(a, b)
+#endregion
+
+#region MaxArray sum
+"""
+Given an array of integers, 
+find the subset of non-adjacent elements with the maximum sum. 
+Calculate the sum of that subset. 
+It is possible that the maximum sum is 0, the case when all elements are negative.
+Returns:  int: the maximum subset sum
+"""
+arr = [3, 5, -7, 8, 10] #res=15 (10+5)
+arr = [2, 1, 5, 8, 4] # res=11 (4+5+2)
+def maxSubsetSum(arr):
+    dp = list()
+    dp.append(arr[0])
+    dp.append(max(arr[:2]))
+    ans = dp[-1]
+    for i in arr[2:]:
+        print(i, dp)
+        dp.append(max(i, dp[-2] + i, ans))
+        ans = max(ans, dp[-1])
+    return ans
+#endregion
+
+#region Triple Sum
+"""
+Given 3 arrays a, b, c find all triples (i,j,k) such as i<=j and j>=k
+(with i in a, j in b, k in c)
+return: number of triples
+"""
+a=[1, 3, 5, 7]
+b=[5, 7, 9]
+c=[7, 9, 11, 13]
+# expected output: 12
+def triplets(a, b, c):
+    a = sorted(set(a))
+    b = sorted(set(b),reverse=True)
+    c = sorted(set(c))
+
+    nb_triplets=0
+    for i in a:
+        for j in b:
+            if j<i: break
+            for k in c:
+                if k>j: break
+                nb_triplets+=1
+    return nb_triplets
+
+
+#endregion
