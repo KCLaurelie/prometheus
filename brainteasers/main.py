@@ -1541,3 +1541,31 @@ def whatFlavors(cost, money):
             saved_values[value] = counter
 
 #endregion
+
+#region Candies
+"""
+a teacher gives candies to her students.
+if student has bigger score than their neighbor, they must receive more candies
+when two children have equal score, they can have different number of candies.
+minimum amount of candies?
+"""
+arr = [4,2,6,1,7,8,9,2,1]
+# candies distributed: [1,2,1,2,1,2,3,4,2,1] total=18
+def candies(arr):
+    n=len(arr)
+    candies = [1]*n
+    for i in range(n-1):
+        if arr[i+1]>arr[i]:
+            candies[i+1] = candies[i]+1
+        print("first pass", candies)
+    for i in range(n-1,0,-1):
+        if arr[i-1]>arr[i] and candies[i-1]<=candies[i]:
+            candies[i-1] = candies[i]+1
+        print("second pass", candies)
+    return sum(candies)
+
+
+
+
+
+#endregion
