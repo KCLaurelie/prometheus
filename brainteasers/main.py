@@ -1636,3 +1636,41 @@ def triplets(a, b, c):
 
 
 #endregion
+
+#region Poisonous plants
+"""
+There are a number of plants in a garden.
+Each of the plants has been treated with some amount of pesticide.
+After each day, if any plant has more pesticide than the plant on its left, it dies.
+
+You are given the initial values of the pesticide in each of the plants. 
+Determine the number of days after which no plant dies, 
+i.e. the time after which there is no plant with more pesticide content than the plant to its left.
+"""
+p=[3,6,2,7,5]
+#after day 1: [3,2,1], after day 2: [3,2]
+class Plant:
+    def __init__(self, pesticide, days):
+        self.pesticide = pesticide
+        self.days = days
+
+
+def poisonousPlants(p):
+    stack = []
+    maxDaysAlive = 0
+
+    for pesticide in p:
+        daysAlive = 0
+        while stack and pesticide <= stack[-1].pesticide:
+            daysAlive = max(daysAlive, stack.pop().days)
+
+        if not stack:
+            daysAlive = 0
+        else:
+            daysAlive += 1
+        maxDaysAlive = max(maxDaysAlive, daysAlive)
+        stack.append(Plant(pesticide, daysAlive))
+
+    return (maxDaysAlive)
+
+#endregion
