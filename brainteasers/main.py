@@ -606,7 +606,7 @@ rotLeft(arr, 14)
 
 #endregion
 
-#region 25 Implement a queue using a linked list TODO
+#region 25 Implement a queue using a linked list
 """
 https://www.geeksforgeeks.org/queue-linked-list-implementation/
 
