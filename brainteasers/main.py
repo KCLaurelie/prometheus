@@ -1514,3 +1514,30 @@ def maxMin(k, arr):
             min_diff=curr_diff
     return min_diff
 #endregion
+
+#region Icecream parlor
+"""
+Each time Sunny and Johnny take a trip to the Ice Cream Parlor, 
+they pool their money to buy ice cream. 
+On any given day, the parlor offers a line of flavors, each flavor has a cost c.
+Help Sunny and Johnny choose 2 distinct flavors such that they spend their entire pool of money during each visit.
+Note: there is always a unique solution
+Output: int int: the indices of the two flavors they will purchase as two space-separated integers on a line
+"""
+cost, money = [2,1,3,5,6], 5  # exp output [1, 3] (2+3)
+cost, money = [1, 4, 5, 3, 2], 4 # exp output [1,4]
+cost, money = [2, 2, 4, 3], 4 # exp output [1,2]
+
+sorted_costs = dict(sorted(enumerate(cost), key=lambda e: e[1])) # need to swap keys, values
+costs_dic = {k: v for v, k in enumerate(cost)} # not good because removes duplicates
+
+def whatFlavors(cost, money):
+    saved_values = {}
+    for counter, value in enumerate(cost):
+        print(saved_values)
+        if money-value in saved_values:
+            print(saved_values[money-value] + 1, counter + 1)
+        elif value not in saved_values:
+            saved_values[value] = counter
+
+#endregion
