@@ -56,11 +56,12 @@ df_ward = pd.merge(df, df_ward,  how='inner', on=['brcid'], suffixes=[None, '_to
 df_ward['readmission'] = 1 * (df_ward['num_ward_entries'] > 1)
 
 df_nlp_ci = pd.merge(df, df_nlp_ci,  how='inner', on=['brcid'], suffixes=[None, '_tomerge'])
+
+del df
+df = df_nlp_ci  # ***** which df to use ******
 #####################################################################
 
 # clean age values and drop missing
-del df
-df = df_nlp_ci # ***** which df to use ******
 if 'age_at_score' not in df.columns: df['age_at_score'] = np.maximum(10, df.score_year - df.dob.dt.year.fillna(1900))
 df = df.loc[(df.score_year >= 2000) & (df.score_year < 2021)].copy()
 df = df.dropna(subset=['age_at_score']).copy()
