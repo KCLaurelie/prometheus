@@ -10,7 +10,7 @@ except:
     xls = pd.ExcelFile('/Users/k1774755/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
 
 # pre-built Sample C
-df_pop = pd.read_excel(xls, 'traj')
+df = pd.read_excel(xls, 'traj')
 diag_cols = ['abuse_neglect','adhd','dementia','depressive','eating','learning','mania_bipolar','mood_other','nervous_syst','other_organic','personality','psychotic','sexual','sleep','stress','substance_abuse']
 
 # to rebuild samples
