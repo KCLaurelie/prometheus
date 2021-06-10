@@ -1,6 +1,10 @@
 from longitudinal_modelling.mlm import *
 from longitudinal_modelling.regression import *
 
+# to debug: add configuration / python / choose file name
+# then press bug button / go in debug console
+# to kill: press red stop button / then kill face
+
 ###############################################
 ## LOAD DATA
 ###############################################
@@ -8,6 +12,7 @@ try:
     xls = pd.ExcelFile('/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
 except:
     xls = pd.ExcelFile('/Users/k1774755/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
+
 
 # pre-built Sample C
 df = pd.read_excel(xls, 'traj').fillna(0)
