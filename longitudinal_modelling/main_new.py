@@ -8,23 +8,26 @@ from longitudinal_modelling.regression import *
 ###############################################
 ## LOAD DATA
 ###############################################
-try:
-    xls = pd.ExcelFile('/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
-except:
-    xls = pd.ExcelFile('/Users/k1774755/PycharmProjects/prometheus/longitudinal_modelling/cris_traj_20210322.xlsx', engine='openpyxl')
+path_mac = '/Users/aurelie/PycharmProjects/prometheus/longitudinal_modelling/'
+path_win = '/Users/k1774755/PycharmProjects/prometheus/longitudinal_modelling/'
+path_to_use = path_mac
+xls = pd.ExcelFile(path_to_use + 'cris_traj_20210322.xlsx', engine='openpyxl')
 
 
 # pre-built Sample C
 df = pd.read_excel(xls, 'traj').fillna(0)
-diag_cols = ['abuse_neglect','adhd','dementia','depressive','eating','learning','mania_bipolar','mood_other','nervous_syst','other_organic','personality','psychotic','sexual','sleep','stress','substance_abuse']
+
+# docs
+docs = pd.read_csv(path_to_use + 'cris_all_docs.csv')
+df = pd.merge(df, docs,  how='left', left_on=['brcid', 'score_year'], right_on=['brcid', 'year'], suffixes=[None, '_tomerge']).fillna(0)
 
 # to rebuild samples
-include_unknown = True # include patients with unknown diagnosis
+include_unknown = False # include patients with unknown diagnosis
 df_nlp_ci = pd.read_excel(xls, 'nlp_ci').dropna(subset=['score_year'])
 df_pop = pd.read_excel(xls, 'pop')
 df_diag = pd.read_excel(xls, 'diag')
-df_honos = pd.read_excel(xls, 'honos')
 df_ward = pd.read_excel(xls, 'ward')
+df_honos = pd.read_excel(xls, 'honos')
 
 df_diag = pd.pivot_table(df_diag, values='diag_date', index='brcid', columns='diag', aggfunc=np.max, fill_value=0)
 diag_cols = list(df_diag.columns)
@@ -44,7 +47,7 @@ df['ethnicity_not_white'] = 1 - df['ethnicity_white']
 df['education_above_gcse'] = 1 - df['education_level_no_education']
 df['not_homeless'] = 1 - df['housing_status_homeless_or_not_fixed']
 cov_sociodem_minus = ['gender_male', 'education_level_no_education', 'ethnicity_not_white', 'marital_status_single_separated', 'employment_unemployed', 'housing_status_homeless_or_not_fixed']
-cov_sociodem_plus = ['gender_female', 'education_above_gcse', 'ethnicity_white', 'marital_status_married_cohabitating', 'employment_employed', 'not_homeless']
+cov_sociodem_plus = ['gender_female', 'education_above_gcse', 'ethnicity_white', 'marital_status_married_cohabitating', 'employment_employed'] #, 'not_homeless']
 cov_sociodem_plus_nlp = ['education_level_no_education' if x == 'education_above_gcse' else x for x in cov_sociodem_plus]
 for col in diag_cols:
     if col in df.columns:
@@ -65,7 +68,7 @@ df_nlp_ci = pd.merge(df, df_nlp_ci,  how='inner', on=['brcid'], suffixes=[None, 
 del df
 df = df_nlp_ci  # ***** which df to use ******
 #####################################################################
-
+# RUN THIS FOR ALL SAMPLES
 # clean age values and drop missing
 if 'age_at_score' not in df.columns: df['age_at_score'] = np.maximum(10, df.score_year - df.dob.dt.year.fillna(1900))
 df = df.loc[(df.score_year >= 2000) & (df.score_year < 2021)].copy()
@@ -90,13 +93,18 @@ df['age_centered'] = 1 + df.age_at_score - df.age_at_score_baseline
 df['age_rounded'] = np.floor(df.age_at_score / 10) * 10
 df['fifty_older'] = np.where(df.age_at_score_baseline >= 50, 1, 0)
 df['fifty_younger'] = 1 - df['fifty_older']
+df['nlp_noattn'] = df[['memory_bool', 'emotion_bool','exec_function_bool','cognition_bool']].sum(axis=1)
+
+df['mood'] = np.minimum(1, df.mania_bipolar + df.mood_other)
+df['organic'] = np.minimum(1, df.dementia + df.other_organic)
+diag_cols = ['abuse_neglect','adhd','organic','depressive','eating','learning','mood','nervous_syst','personality','psychotic','sexual','sleep','stress','substance_abuse']
 
 ###############################################
 # TRAJECTORY ANALYSIS
 ###############################################
 traj_brcid = df.groupby('brcid', as_index=False).size()
 df_mlm = pd.merge(df, traj_brcid.loc[traj_brcid['size'] >= 3],  how='inner', on=['brcid'], suffixes=[None, '_tomerge'])
-res = fit_mlm(df_mlm, group='brcid', target='nlp_ci', covariates=cov_sociodem_plus+diag_no, timestamp='age_centered', rdn_slope=True, method=['lbfgs'])
+res = fit_mlm(df_mlm, group='brcid', target='nlp_ci', covariates=cov_sociodem_plus+diag_cols+['num_docs'], timestamp='age_centered', rdn_slope=True, method=['lbfgs'])
 res = fit_mlm(df_mlm, group='brcid', target='nlp_ci', covariates=['age_rounded']+cov_sociodem_plus+diag_cols, timestamp='counter', rdn_slope=True, method=['lbfgs'])
 (res['stats']).to_clipboard(index=False, header=False)
 (res['coeffs']).to_clipboard()
@@ -121,11 +129,12 @@ def run_all_diag_traj(df, target='nlp_ci', covariates=cov_sociodem_plus, timesta
 target='Cognitive_Problems_Score_ID_bool'
 target='nlp_ci'
 res_reg = fit_reg(df, target=target, covariates=cov_sociodem_plus+diag_no, timestamp='age_centered', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
+res_reg = fit_reg(df, target='num_ward_entries', covariates=cov_sociodem_plus+['memory_bool', 'emotion_bool','exec_function_bool','cognition_bool', 'attention_bool', 'num_docs'], timestamp='age_centered', reg_fn=sm.OLS, dummyfy_non_num=True, intercept=False)
 res_reg['stats'].to_clipboard(index=False, header=False)
 res_reg['coeffs'].to_clipboard()
 
 
-def run_all_diag_reg(df, target='ward_len', score='nlp_ci_bool', covariates='cov_sociodem_plus_nlp', timestamp='age_centered', intercept=False):
+def run_all_diag_reg(df, target='ward_len', score='nlp_ci_bool', covariates=cov_sociodem_plus_nlp, timestamp='age_centered', intercept=False):
     to_paste = pd.DataFrame()
     reg_fn = sm.OLS if df[target].max() > 1 else sm.Logit
     for col in diag_cols:
@@ -141,6 +150,19 @@ def run_all_diag_reg(df, target='ward_len', score='nlp_ci_bool', covariates='cov
             pass
     return to_paste
 
+nlp_cov = ['memory_bool', 'emotion_bool','exec_function_bool','cognition_bool', 'attention_bool']
+to_paste = pd.DataFrame()
+for col in diag_cols:
+    try:
+        df_tmp = df.loc[df[col] == 1]
+        title = col + '_' + str(len(df_tmp))
+        res = fit_reg(df_tmp, target='num_ward_entries', covariates=cov_sociodem_plus_nlp+['nlp_ci','num_docs'], timestamp='age_centered', reg_fn=sm.OLS, dummyfy_non_num=True,intercept=False)['coeffs']
+        to_paste = to_paste.append(pd.DataFrame([[title]], columns=[res.columns[0]])).append(res)
+        res = fit_reg(df_tmp, target='num_ward_entries', covariates='nlp_ci', timestamp=None, reg_fn=sm.OLS, dummyfy_non_num=True,intercept=False)['coeffs']
+        to_paste = to_paste.append(pd.DataFrame([[title]], columns=[res.columns[0]])).append(res)
+    except:
+        pass
+to_paste[to_paste.index.isin(['nlp_ci',0])].to_clipboard()
 
 res = run_all_diag_reg(df, target='ward_len', score='nlp_ci', covariates=cov_sociodem_plus, timestamp='age_centered', intercept=False)
 res = run_all_diag_reg(df, target='num_ward_entries', score='nlp_ci', covariates=cov_sociodem_plus, timestamp='age_centered', intercept=False)
