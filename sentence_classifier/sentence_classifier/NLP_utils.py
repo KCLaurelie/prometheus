@@ -13,7 +13,8 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.model_selection import StratifiedKFold
 import spacy
 
-nlp = spacy.load('en')
+# fully specify model name - en shortcut no longer works
+nlp = spacy.load('en_core_web_sm')
 
 """# Functions to tokenize text"""
 
